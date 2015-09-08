@@ -60,8 +60,6 @@ and string_of_name = function
   | FreshIn n -> "?" ^ (string_of_int n)
   | Placeholder n -> n
     
-
-
 let string_of_def { name; params; body } =
   sprintf "def %s(%s) = %s" name (Utils.string_join ", " params) (string_of_proc body)
 
@@ -141,7 +139,17 @@ let name_compare (n:name) (m:name) : int =
   | (_, FreshIn _) -> 1
   | (Placeholder a, Placeholder b) -> String.compare a b
 
- 
+let rec names_compare (ns:name list) (ms:name list) : int =
+  match (ns, ms) with
+  | ([], []) -> 0
+  | ([], _) -> -1
+  | (_, []) -> 1
+  | (n::ns', m::ms') ->
+    let comp = name_compare n m in
+    (match comp with
+    | 0 -> names_compare ns' ms'
+    | _ -> comp)
+    
 let act_compare (a:act) (b:act) : int =
   match (a, b) with
   | (Tau, Tau) -> 0
@@ -159,4 +167,61 @@ let act_compare (a:act) (b:act) : int =
      (match comp with
      | 0 -> String.compare v1 v2
      | _ -> comp)
+    
+
+let gensym_GENERATED = ref 0 ;;
+  
+let gensym (prefix:string) =
+  let sym = prefix ^ (string_of_int !gensym_GENERATED) in
+  incr gensym_GENERATED ;
+  sym
+       
+let rec proc_compare (p:proc) (q:proc) : int =
+  match (p, q) with
+  | (Inert, Inert) -> 0
+  | (Inert, _) -> -1
+  | (_, Inert) -> 1
+  | (Prefix (a, p), Prefix (b, q)) ->
+    let comp = act_compare a b in
+    (match comp with
+    | 0 -> proc_compare p q
+    | _ -> comp)
+  | (Prefix _, _) -> -1
+  | (_, Prefix _) -> 1
+  | (Sum (p, q), Sum (p', q'))
+  | (Par (p, q), Par (p', q')) ->
+    let comp = proc_compare p p' in
+    (match comp with
+    | 0 -> proc_compare q q'
+    | _ -> comp)
+  | (Sum _, _) -> -1
+  | (_, Sum _) -> 1
+  | (Par _, _) -> -1
+  | (_, Par _) -> 1
+  | (Res (n, p), Res(m, q)) ->
+    let fresh = Placeholder (gensym "_fresh#") in
+    proc_compare
+      (subst_proc p (Env.add n fresh Env.empty))
+      (subst_proc q (Env.add m fresh Env.empty))
+  | (Res _, _) -> -1
+  | (_, Res _) -> 1
+  | (Match (a, b, p), Match (a', b', p'))
+  | (Mismatch (a, b, p), Mismatch (a', b', p')) ->
+    let comp = name_compare a a' in
+    (match comp with
+    | 0 -> let comp = name_compare b b' in
+	   (match comp with
+	   | 0 -> proc_compare p p'
+	   | _ -> comp)
+    | _ -> comp)
+  | (Match _, _) -> -1
+  | (_, Match _) -> 1
+  | (Mismatch _, _) -> -1
+  | (_, Mismatch _) -> 1
+  | (Call (f, args), Call (f', args')) ->
+    let comp = Pervasives.compare f f' in
+    (match comp with
+    | 0 -> names_compare args args'
+    | _ -> comp)
+
     
