@@ -8,7 +8,7 @@ open Printf
 **)
   
 type proc =
-  Inert
+  Silent
 | Prefix of (act * proc)
 | Sum of (proc * proc)
 | Par of (proc * proc)
@@ -29,8 +29,33 @@ and name =
 | FreshIn of int
 | Placeholder of string
 
+module StringSet = Set.Make (String)
+  
+let rec static_proc (p:proc) (bound:StringSet.t) : proc =
+  match p with
+  | Silent -> p
+  | Prefix (Tau, p) -> Prefix (Tau, static_proc p bound)
+  | Prefix (Out(a, b), p) -> Prefix (Out(static_name a bound, static_name b bound), static_proc p bound)
+  | Prefix (In(a, x), p) -> Prefix (In(static_name a bound, x), static_proc p (StringSet.add x bound))
+  | Sum (p, q) -> Sum (static_proc p bound, static_proc q bound)
+  | Par (p, q) -> Par (static_proc p bound, static_proc q bound)
+  | Res (x, p) -> Res (x, static_proc p (StringSet.add x bound))
+  | Match (a, b, p) -> Match (static_name a bound, static_name b bound, static_proc p bound)
+  | Mismatch (a, b, p) -> Mismatch (static_name a bound, static_name b bound, static_proc p bound)
+  | Call (f, args) -> Call (f, List.map (fun x -> static_name x bound) args)
+
+and static_name (n:name) (bound:StringSet.t) : name =
+  match n with
+  | Placeholder x -> if (StringSet.mem x bound) then n else (Static x)
+  | _ -> n
+      
 type def =
   { name: string; params: string list; body: proc }
+
+let rec mk_res (rs:string list) (p:proc) : proc =
+  match rs with
+  | [] -> p
+  | r::rs' -> Res (r, mk_res rs' p)
     
 (**
 
@@ -39,7 +64,7 @@ type def =
 **)
     
 let rec string_of_proc = function
-  | Inert -> "0"
+  | Silent -> "0"
   | Prefix (a, p) -> sprintf "%s.%s" (string_of_act a) (string_of_proc p)
   | Sum (p, q) -> sprintf "[%s + %s]" (string_of_proc p) (string_of_proc q)
   | Par (p, q) -> sprintf "(%s | %s)" (string_of_proc p) (string_of_proc q)
@@ -79,7 +104,7 @@ let subst_name (n:name) (env:name Env.t) : name =
   
 let rec subst_proc (p:proc) (env:name Env.t) : proc =
   match p with
-  | Inert -> p
+  | Silent -> p
   | Prefix (Tau, p) -> Prefix (Tau, (subst_proc p env))
   | Prefix (Out (chan, data), p) -> Prefix (Out (subst_name chan env, subst_name data env), subst_proc p env)
   | Prefix (In (chan, var), p) -> Prefix (In (subst_name chan env, var), subst_proc p (Env.remove var env))
@@ -168,7 +193,6 @@ let act_compare (a:act) (b:act) : int =
      | 0 -> String.compare v1 v2
      | _ -> comp)
     
-
 let gensym_GENERATED = ref 0 ;;
   
 let gensym (prefix:string) =
@@ -178,9 +202,9 @@ let gensym (prefix:string) =
        
 let rec proc_compare (p:proc) (q:proc) : int =
   match (p, q) with
-  | (Inert, Inert) -> 0
-  | (Inert, _) -> -1
-  | (_, Inert) -> 1
+  | (Silent, Silent) -> 0
+  | (Silent, _) -> -1
+  | (_, Silent) -> 1
   | (Prefix (a, p), Prefix (b, q)) ->
     let comp = act_compare a b in
     (match comp with
