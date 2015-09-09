@@ -1,6 +1,7 @@
 
 OCAMLC=ocamlc
-
+OCAMLLEX=ocamllex
+OCAMLYACC=ocamlyacc
 
 all: piexplorer
 
@@ -14,7 +15,19 @@ pisyntax.cmo: pisyntax.ml utils.cmo
 control.cmo: control.ml pisyntax.cmo utils.cmo
 	$(OCAMLC) -c $< -o $@
 
-piexplorer: utils.cmo pisyntax.cmo control.cmo piexplorer.ml
+piparser.ml: piparser.mly
+	$(OCAMLYACC) $<
+
+piparser.cmo: piparser.ml pisyntax.cmo
+	$(OCAMLC) -c $< -o $@
+
+pilexer.ml: pilexer.mll piparser.mly
+	$(OCAMLLEX) $<
+
+pilexer.cmo: pilexer.ml piparser.cmo
+	$(OCAMLC) -c $< -o $@
+
+piexplorer: utils.cmo pisyntax.cmo control.cmo piparser.cmo pilexer.cmo piexplorer.ml
 	$(OCAMLC) $? -o $@
 
 

@@ -159,7 +159,7 @@
   | name IN LPAREN IDENT RPAREN { In($1, $4) }
 
       sep: COMMA {} | DOT {}
-	  
+      
       list_of_names:
   | IDENT { [$1] }
   | IDENT COMMA list_of_names { $1::$3 }
