@@ -8,7 +8,7 @@ all: piexplorer
 utils.cmo: utils.ml
 	$(OCAMLC) -c $< -o $@
 
-pisyntax.cmo: pisyntax.ml
+pisyntax.cmo: pisyntax.ml utils.cmo
 	$(OCAMLC) -c $< -o $@
 
 piexplorer: utils.cmo pisyntax.cmo piexplorer.ml
