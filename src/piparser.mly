@@ -68,7 +68,7 @@
   | statement error { raise (Fatal_Parse_Error "missing ';' after statement") }
 
       statement:
-  | definition                     
+  | definition
       { Control.handle_definition $1 }
   | BISIM IN proc TILD proc 
       { Control.handle_is_bisim $3 $5 } 
@@ -82,32 +82,38 @@
       { raise (Fatal_Parse_Error "missing '~' for strong bisimilarity") }
   | BISIM process TILD error
       { raise (Fatal_Parse_Error "missing process after '~' for strong bisimilarity") }
-  | BISIM error 
+  | BISIM error
       { raise (Fatal_Parse_Error "missing '?' or process before '~' for strong bisimilarity") }
-  | SBISIM IN process TILD process 
-      { Control.handle_is_sbisim $3 $5 } 
+  | SBISIM IN process TILD process
+      { Control.handle_is_sbisim $3 $5 }
   | SBISIM IN process error
       { raise (Fatal_Parse_Error "missing '~' for strong bisimilarity") }
   | SBISIM IN process TILD error
       { raise (Fatal_Parse_Error "missing process after '~' for strong bisimilarity") }
-  | SBISIM error 
-      { raise (Fatal_Parse_Error "missing '?' or process before '~' for strong bisimilarity") }      
+  | SBISIM error
+      { raise (Fatal_Parse_Error "missing '?' or process before '~' for strong bisimilarity") }
   | DERIV process
       { Control.handle_deriv $2 }
+  | DERIV INT
+      { Control.handle_deriv_next $2 }
+  | DERIV
+      { Control.handle_deriv_random () }
   | DERIV error
-      { raise (Fatal_Parse_Error "missing process to derivate") } 
+      { raise (Fatal_Parse_Error "missing process to derivate") }
   | LTS process
       { Control.handle_lts $2 }
+  | LTS STRING process
+      { Control.handle_lts_file $1 $2 }
   | LTS error
-      { raise (Fatal_Parse_Error "missing process for LTS") } 
+      { raise (Fatal_Parse_Error "missing process for LTS") }
   | MINI process
       { Control.handle_minimization $2 }
   | MINI error
-      {raise (Fatal_Parse_Error "missing process for minimization") } 
+      {raise (Fatal_Parse_Error "missing process for minimization") }
   | FREE process
       { Control.handle_free $2 }
   | FREE error
-      { raise (Fatal_Parse_Error "missing process for free names") } 
+      { raise (Fatal_Parse_Error "missing process for free names") }
   | BOUND process
       { Control.handle_bound $2 }
   | BOUND error

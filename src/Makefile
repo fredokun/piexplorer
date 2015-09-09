@@ -11,7 +11,10 @@ utils.cmo: utils.ml
 pisyntax.cmo: pisyntax.ml utils.cmo
 	$(OCAMLC) -c $< -o $@
 
-piexplorer: utils.cmo pisyntax.cmo piexplorer.ml
+control.cmo: control.ml pisyntax.cmo utils.cmo
+	$(OCAMLC) -c $< -o $@
+
+piexplorer: utils.cmo pisyntax.cmo control.cmo piexplorer.ml
 	$(OCAMLC) $? -o $@
 
 

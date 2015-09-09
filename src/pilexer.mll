@@ -1,5 +1,5 @@
 
-{ 
+{
   open Parser
   let line=ref 1
 
@@ -11,7 +11,7 @@ let digit = ['0'-'9']
 let int = (['1'-'9'] digit*)
 
 let cmt = ('#' [^'\n']*)
-  
+
 let r_def = "def"
 let r_true = "true"
 let r_false = "false"
