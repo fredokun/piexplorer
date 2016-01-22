@@ -68,6 +68,7 @@
 %type <bool> script
 %type <proc> process
 %type <act> prefix
+%type <unit> sep
 
 %type <name> name
 
@@ -75,8 +76,10 @@
 %%
     script:
   | EOF { false }
-  | statement SEMICOL { true }
-  | statement error { raise (Parse_Exception ("missing ';' after statement", (current_pos ()))) }
+  | statement sep { true }
+  | statement error { raise (Parse_Exception ("missing terminator ';' or '.' after statement", (current_pos ()))) }
+
+sep: SEMICOL { () } | DOT { () }
 
       statement:
   | definition
@@ -94,14 +97,6 @@
   | BISIM process TILD error
       { raise (Parse_Exception ("missing process after '~' for strong bisimilarity", (current_pos ()))) }
   | BISIM error
-      { raise (Parse_Exception ("missing '?' or process before '~' for strong bisimilarity", (current_pos ()))) }
-  | SBISIM IN process TILD process
-      { Control.handle_is_sbisim $3 $5 }
-  | SBISIM IN process error
-      { raise (Parse_Exception ("missing '~' for strong bisimilarity", (current_pos ()))) }
-  | SBISIM IN process TILD error
-      { raise (Parse_Exception ("missing process after '~' for strong bisimilarity", (current_pos ()))) }
-  | SBISIM error
       { raise (Parse_Exception ("missing '?' or process before '~' for strong bisimilarity", (current_pos ()))) }
   | DERIV process
       { Control.handle_deriv $2 }

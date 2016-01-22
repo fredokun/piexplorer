@@ -2,6 +2,8 @@
 open Pisyntax
 open Printf
 
+let script_mode = ref false ;;
+
 let global_DEF_MAP = Hashtbl.create 32 ;; 
 
 let handle_definition (d:def_proc) : unit =
@@ -9,7 +11,7 @@ let handle_definition (d:def_proc) : unit =
   printf "Definition '%s' registered.\n" d.name
 
 let not_yet_implemented cmd =
-  printf "Command '%s' not yet implemented." cmd
+  printf "Command '%s' not yet implemented.\n" cmd
 
 let handle_is_bisim (p:proc) (q:proc) : unit =
   not_yet_implemented "bisim ?"
@@ -54,5 +56,5 @@ let handle_help () : unit =
   not_yet_implemented "help"
 
 let handle_quit () : unit =
-  not_yet_implemented "quit"
+  printf "Now quitting ...\nBye bye !\n" ; exit 0
 

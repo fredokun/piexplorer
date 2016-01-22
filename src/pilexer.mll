@@ -64,7 +64,6 @@ let cmd_help = "help"
 let cmd_quit = "quit"
 let cmd_struct = "struct"
 let cmd_bisim = "bisim"
-let cmd_sbisim = "sbisim"
 let cmd_deriv = "deriv"
 let cmd_lts = "lts"
 let cmd_mini = "mini"
@@ -105,7 +104,6 @@ let cmd_names = "names"
     | eqeq { EQEQ }
     | equal { EQUAL }
     | cmd_bisim { BISIM }
-    | cmd_sbisim { SBISIM }
     | cmd_deriv { DERIV }
     | cmd_lts { LTS }
     | cmd_mini { MINI }

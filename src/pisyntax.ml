@@ -30,7 +30,7 @@ and name =
 | Placeholder of string
 
 module StringSet = Set.Make (String)
-  
+
 let rec static_proc (p:proc) (bound:StringSet.t) : proc =
   match p with
   | Silent -> p
@@ -56,13 +56,13 @@ let rec mk_res (rs:string list) (p:proc) : proc =
   match rs with
   | [] -> p
   | r::rs' -> Res (r, mk_res rs' p)
-    
+
 (**
 
   ## Printing
 
-**)
-    
+ **)
+
 let rec string_of_proc = function
   | Silent -> "0"
   | Prefix (a, p) -> sprintf "%s.%s" (string_of_act a) (string_of_proc p)
@@ -84,7 +84,7 @@ and string_of_name = function
   | FreshOut n -> "!" ^ (string_of_int n)
   | FreshIn n -> "?" ^ (string_of_int n)
   | Placeholder n -> n
-    
+
 let string_of_def_proc { name; params; body } =
   sprintf "def %s(%s) = %s" name (Utils.string_join ", " params) (string_of_proc body)
 
@@ -248,4 +248,3 @@ let rec proc_compare (p:proc) (q:proc) : int =
     | 0 -> names_compare args args'
     | _ -> comp)
 
-    
