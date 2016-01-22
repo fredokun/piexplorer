@@ -12,11 +12,11 @@ let usage = "Usage: piexplorer <opt>"
 
 let banner =  "                                                            \n"
               ^ "   ,############;'                                        \n"
-              ^ "   ;#''##''##'''    EEEE X   X PPP  L     OOO             \n"
-              ^ "   '   ##  ##       E     X X  P  P L    O   O            \n"
-              ^ "       ##  ##  :::  EEE    X   PPP  L    O   O            \n"
-              ^ "       ##  ##       E     X X  P    L    O   O            \n"
-              ^ "       ;'  ;'       EEEE X   X P    LLLL  OOO  ===> R.E.R \n" ;;
+              ^ "   ;#''##''##'''    EEEE       PPP        OO              \n"
+              ^ "   '   ##  ##       E     X X  P  P L    O  O   r!e       \n"
+              ^ "       ##  ##  :::  EEE    X   PPP  L    O  O   ---> R    \n"
+              ^ "       ##  ##       E     X X  P    LLL  O  O             \n"
+              ^ "       ;'  ;'       EEEE       P          OO              \n" ;;
 
   
 Printf.printf "%s" banner ;;

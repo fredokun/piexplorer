@@ -37,6 +37,10 @@ let handle_deriv_random () : unit =
 let handle_lts (p:proc) : unit =
   not_yet_implemented "lts <proc>"
 
+let handle_parse (p:proc) : unit =
+  printf "Parsed process:\n" ;
+  printf "%s\n" (string_of_proc p)
+
 let handle_lts_file (f:string) (p:proc) : unit =
   not_yet_implemented "lts <string> <proc>"
 

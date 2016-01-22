@@ -1,6 +1,8 @@
 
 open Printf
 
+open Utils
+       
 (**
 
 ## Syntax representation
@@ -8,14 +10,14 @@ open Printf
 **)
 
 type proc =
-  Silent
-| Prefix of (act * proc)
-| Sum of (proc * proc)
-| Par of (proc * proc)
-| Res of (string * proc)
-| Match of (name * name * proc)
-| Mismatch of (name * name * proc)
-| Call of (string * name list)
+  Silent of parse_pos
+| Prefix of (act * proc * parse_pos)
+| Sum of (proc * proc * parse_pos)
+| Par of (proc * proc * parse_pos)
+| Res of (string * proc * parse_pos)
+| Match of (name * name * proc * parse_pos)
+| Mismatch of (name * name * proc * parse_pos)
+| Call of (string * name list * parse_pos)
 
 and act =
   Tau
@@ -29,20 +31,31 @@ and name =
 | FreshIn of int
 | Placeholder of string
 
+let pos_of_proc (p:proc) : parse_pos =
+  match p with
+  | Silent pos -> pos
+  | Prefix (_, _, pos) -> pos
+  | Sum (_, _, pos) -> pos
+  | Par (_, _, pos) -> pos
+  | Res (_, _, pos) -> pos
+  | Match (_, _, _, pos) -> pos
+  | Mismatch (_, _, _, pos) -> pos
+  | Call (_, _, pos) -> pos
+		   
 module StringSet = Set.Make (String)
 
 let rec static_proc (p:proc) (bound:StringSet.t) : proc =
   match p with
-  | Silent -> p
-  | Prefix (Tau, p) -> Prefix (Tau, static_proc p bound)
-  | Prefix (Out(a, b), p) -> Prefix (Out(static_name a bound, static_name b bound), static_proc p bound)
-  | Prefix (In(a, x), p) -> Prefix (In(static_name a bound, x), static_proc p (StringSet.add x bound))
-  | Sum (p, q) -> Sum (static_proc p bound, static_proc q bound)
-  | Par (p, q) -> Par (static_proc p bound, static_proc q bound)
-  | Res (x, p) -> Res (x, static_proc p (StringSet.add x bound))
-  | Match (a, b, p) -> Match (static_name a bound, static_name b bound, static_proc p bound)
-  | Mismatch (a, b, p) -> Mismatch (static_name a bound, static_name b bound, static_proc p bound)
-  | Call (f, args) -> Call (f, List.map (fun x -> static_name x bound) args)
+  | Silent _ -> p
+  | Prefix (Tau, p, pos) -> Prefix (Tau, static_proc p bound, pos)
+  | Prefix (Out(a, b), p, pos) -> Prefix (Out(static_name a bound, static_name b bound), static_proc p bound, pos)
+  | Prefix (In(a, x), p, pos) -> Prefix (In(static_name a bound, x), static_proc p (StringSet.add x bound), pos)
+  | Sum (p, q, pos) -> Sum (static_proc p bound, static_proc q bound, pos)
+  | Par (p, q, pos) -> Par (static_proc p bound, static_proc q bound, pos)
+  | Res (x, p, pos) -> Res (x, static_proc p (StringSet.add x bound), pos)
+  | Match (a, b, p, pos) -> Match (static_name a bound, static_name b bound, static_proc p bound, pos)
+  | Mismatch (a, b, p, pos) -> Mismatch (static_name a bound, static_name b bound, static_proc p bound, pos)
+  | Call (f, args, pos) -> Call (f, List.map (fun x -> static_name x bound) args, pos)
 
 and static_name (n:name) (bound:StringSet.t) : name =
   match n with
@@ -55,7 +68,7 @@ type def_proc =
 let rec mk_res (rs:string list) (p:proc) : proc =
   match rs with
   | [] -> p
-  | r::rs' -> Res (r, mk_res rs' p)
+  | r::rs' -> Res (r, mk_res rs' p, pos_of_proc p)
 
 (**
 
@@ -64,14 +77,14 @@ let rec mk_res (rs:string list) (p:proc) : proc =
  **)
 
 let rec string_of_proc = function
-  | Silent -> "0"
-  | Prefix (a, p) -> sprintf "%s.%s" (string_of_act a) (string_of_proc p)
-  | Sum (p, q) -> sprintf "[%s + %s]" (string_of_proc p) (string_of_proc q)
-  | Par (p, q) -> sprintf "(%s | %s)" (string_of_proc p) (string_of_proc q)
-  | Res (n, p) -> sprintf "new(%s){%s}" n (string_of_proc p)
-  | Match (a, b, p) -> sprintf "[%s=%s]%s" (string_of_name a) (string_of_name b) (string_of_proc p)
-  | Mismatch (a, b, p) -> sprintf "[%s<>%s]%s" (string_of_name a) (string_of_name b) (string_of_proc p)
-  | Call (f, args) -> sprintf "%s(%s)" f (Utils.string_join ", " (List.map string_of_name args))
+  | Silent _ -> "0"
+  | Prefix (a, p, _) -> sprintf "%s.%s" (string_of_act a) (string_of_proc p)
+  | Sum (p, q, _) -> sprintf "[%s + %s]" (string_of_proc p) (string_of_proc q)
+  | Par (p, q, _) -> sprintf "(%s | %s)" (string_of_proc p) (string_of_proc q)
+  | Res (n, p, _) -> sprintf "new(%s){%s}" n (string_of_proc p)
+  | Match (a, b, p, _) -> sprintf "[%s=%s]%s" (string_of_name a) (string_of_name b) (string_of_proc p)
+  | Mismatch (a, b, p, _) -> sprintf "[%s<>%s]%s" (string_of_name a) (string_of_name b) (string_of_proc p)
+  | Call (f, args, _) -> sprintf "%s(%s)" f (Utils.string_join ", " (List.map string_of_name args))
 
 and string_of_act = function
   | Tau -> "tau"
@@ -80,7 +93,7 @@ and string_of_act = function
 
 and string_of_name = function
   | Static n -> n
-  | Private n -> "^" ^ n
+  | Private n -> "#" ^ n
   | FreshOut n -> "!" ^ (string_of_int n)
   | FreshIn n -> "?" ^ (string_of_int n)
   | Placeholder n -> n
@@ -104,16 +117,16 @@ let subst_name (n:name) (env:name Env.t) : name =
   
 let rec subst_proc (p:proc) (env:name Env.t) : proc =
   match p with
-  | Silent -> p
-  | Prefix (Tau, p) -> Prefix (Tau, (subst_proc p env))
-  | Prefix (Out (chan, data), p) -> Prefix (Out (subst_name chan env, subst_name data env), subst_proc p env)
-  | Prefix (In (chan, var), p) -> Prefix (In (subst_name chan env, var), subst_proc p (Env.remove var env))
-  | Sum (p, q) -> Sum (subst_proc p env, subst_proc q env)
-  | Par (p, q) -> Par (subst_proc p env, subst_proc q env)
-  | Res (n, p) -> subst_proc p (Env.remove n env)
-  | Match (a, b, p) -> Match (subst_name a env, subst_name b env, subst_proc p env)
-  | Mismatch (a, b, p) -> Mismatch (subst_name a env, subst_name b env, subst_proc p env)
-  | Call (f, args) -> Call (f, List.map (fun arg -> subst_name arg env) args)
+  | Silent _ -> p
+  | Prefix (Tau, p, pos) -> Prefix (Tau, (subst_proc p env), pos)
+  | Prefix (Out (chan, data), p, pos) -> Prefix (Out (subst_name chan env, subst_name data env), subst_proc p env, pos)
+  | Prefix (In (chan, var), p, pos) -> Prefix (In (subst_name chan env, var), subst_proc p (Env.remove var env), pos)
+  | Sum (p, q, pos) -> Sum (subst_proc p env, subst_proc q env, pos)
+  | Par (p, q, pos) -> Par (subst_proc p env, subst_proc q env, pos)
+  | Res (n, p, pos) -> subst_proc p (Env.remove n env)
+  | Match (a, b, p, pos) -> Match (subst_name a env, subst_name b env, subst_proc p env, pos)
+  | Mismatch (a, b, p, pos) -> Mismatch (subst_name a env, subst_name b env, subst_proc p env, pos)
+  | Call (f, args, pos) -> Call (f, List.map (fun arg -> subst_name arg env) args, pos)
 
 (**
 
@@ -202,18 +215,18 @@ let gensym (prefix:string) =
        
 let rec proc_compare (p:proc) (q:proc) : int =
   match (p, q) with
-  | (Silent, Silent) -> 0
-  | (Silent, _) -> -1
-  | (_, Silent) -> 1
-  | (Prefix (a, p), Prefix (b, q)) ->
+  | (Silent _, Silent _) -> 0
+  | (Silent _, _) -> -1
+  | (_, Silent _) -> 1
+  | (Prefix (a, p, _), Prefix (b, q, _)) ->
     let comp = act_compare a b in
     (match comp with
     | 0 -> proc_compare p q
     | _ -> comp)
   | (Prefix _, _) -> -1
   | (_, Prefix _) -> 1
-  | (Sum (p, q), Sum (p', q'))
-  | (Par (p, q), Par (p', q')) ->
+  | (Sum (p, q, _), Sum (p', q', _))
+  | (Par (p, q, _), Par (p', q', _)) ->
     let comp = proc_compare p p' in
     (match comp with
     | 0 -> proc_compare q q'
@@ -222,15 +235,15 @@ let rec proc_compare (p:proc) (q:proc) : int =
   | (_, Sum _) -> 1
   | (Par _, _) -> -1
   | (_, Par _) -> 1
-  | (Res (n, p), Res(m, q)) ->
+  | (Res (n, p, _), Res(m, q, _)) ->
     let fresh = Placeholder (gensym "_fresh#") in
     proc_compare
       (subst_proc p (Env.add n fresh Env.empty))
       (subst_proc q (Env.add m fresh Env.empty))
   | (Res _, _) -> -1
   | (_, Res _) -> 1
-  | (Match (a, b, p), Match (a', b', p'))
-  | (Mismatch (a, b, p), Mismatch (a', b', p')) ->
+  | (Match (a, b, p, _), Match (a', b', p', _))
+  | (Mismatch (a, b, p, _), Mismatch (a', b', p', _)) ->
     let comp = name_compare a a' in
     (match comp with
     | 0 -> let comp = name_compare b b' in
@@ -242,7 +255,7 @@ let rec proc_compare (p:proc) (q:proc) : int =
   | (_, Match _) -> 1
   | (Mismatch _, _) -> -1
   | (_, Mismatch _) -> 1
-  | (Call (f, args), Call (f', args')) ->
+  | (Call (f, args, _), Call (f', args', _)) ->
     let comp = Pervasives.compare f f' in
     (match comp with
     | 0 -> names_compare args args'

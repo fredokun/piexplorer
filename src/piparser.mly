@@ -34,6 +34,7 @@
 %token FREE
 %token BOUND
 %token NAMES
+%token PARSE
 
 %token HELP
 %token QUIT
@@ -54,7 +55,7 @@
 %nonassoc INF , INFEQ, SUP, SUPEQ, DIFF, EQUAL
 %left PLUS , MINUS
 %left MULT , DIV , MOD
-%right COMMA
+%right COMMA, DOT
 %left OUT IN
 
 %nonassoc UNARY
@@ -112,6 +113,10 @@ sep: SEMICOL { () } | DOT { () }
       { Control.handle_lts_file $2 $3 }
   | LTS error
       { raise (Parse_Exception ("missing process for LTS", (current_pos ()))) }
+  | PARSE process
+      { Control.handle_parse $2 }
+  | PARSE error
+      { raise (Parse_Exception ("missing process for PARSE", (current_pos ()))) }
   | MINI process
       { Control.handle_minimization $2 }
   | MINI error
@@ -135,27 +140,27 @@ sep: SEMICOL { () } | DOT { () }
 
       process:
   | INT 
-      { if $1 = 0 then Silent 
+      { if $1 = 0 then (Silent (current_pos ())) 
         else raise (Parse_Exception ("Only 0 can be used as Silent process", (current_pos ()))) }
   | END 
-      { Silent }
-  | prefix { Prefix($1,Silent) }
-  | prefix sep process { Prefix($1,$3) }
+      { Silent (current_pos ()) }
+  | prefix { Prefix($1,Silent (current_pos ()), (current_pos ())) }
+  | prefix sep process { Prefix($1,$3, (current_pos ())) }
   | prefix sep error
       { raise (Parse_Exception ("right-hand process missing after prefix", (current_pos ()))) }
   | prefix error
       { raise (Parse_Exception ("missing ',' or '.' after prefix", (current_pos ()))) }
-  | process PAR process {  Par($1,$3) }
+  | process PAR process {  Par($1,$3, (current_pos ())) }
   | process PAR error
       { raise (Parse_Exception ("right-hand process missing in parallel", (current_pos ()))) }
-  | process PLUS process { Sum($1,$3) }
+  | process PLUS process { Sum($1,$3, (current_pos ())) }
   | process PLUS error
       { raise (Parse_Exception ("right-hand process missing in sum", (current_pos ()))) }
   | process error
       { raise (Parse_Exception ("missing parallel '||' or sum '+' symbol after process", (current_pos ()))) }
   | NEW LPAREN list_of_idents RPAREN %prec UNARY process { mk_res $3 $5 }
-  | IDENT LPAREN list_of_names RPAREN { Call($1,$3) }
-  | IDENT { Call($1,[]) }
+  | IDENT LPAREN list_of_names RPAREN { Call($1,$3, (current_pos ())) }
+  | IDENT { Call($1,[], (current_pos ())) }
   | LPAREN process RPAREN { $2 }
   | LBRACKET process RBRACKET { $2 }
 

@@ -70,6 +70,7 @@ let cmd_mini = "mini"
 let cmd_free = "free"
 let cmd_bound = "bound"
 let cmd_names = "names"
+let cmd_parse = "parse"
 
   rule token = parse
     | ws
@@ -110,6 +111,7 @@ let cmd_names = "names"
     | cmd_free { FREE }
     | cmd_bound { BOUND }
     | cmd_names { NAMES }
+    | cmd_parse { PARSE }
 
     | cmd_help { HELP }
     | cmd_quit { QUIT }

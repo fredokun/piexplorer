@@ -22,7 +22,7 @@ let string_of_pos pos =
   sprintf "%d:%d => %d:%d"
           pos.start_pos.pos_lnum pos.start_pos.pos_cnum
           pos.end_pos.pos_lnum pos.end_pos.pos_lnum
-
+	  
 (* string utilities *)
 
 
