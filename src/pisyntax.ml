@@ -6,7 +6,7 @@ open Printf
 ## Syntax representation
 
 **)
-  
+
 type proc =
   Silent
 | Prefix of (act * proc)
@@ -48,8 +48,8 @@ and static_name (n:name) (bound:StringSet.t) : name =
   match n with
   | Placeholder x -> if (StringSet.mem x bound) then n else (Static x)
   | _ -> n
-      
-type def =
+
+type def_proc =
   { name: string; params: string list; body: proc }
 
 let rec mk_res (rs:string list) (p:proc) : proc =
@@ -85,7 +85,7 @@ and string_of_name = function
   | FreshIn n -> "?" ^ (string_of_int n)
   | Placeholder n -> n
     
-let string_of_def { name; params; body } =
+let string_of_def_proc { name; params; body } =
   sprintf "def %s(%s) = %s" name (Utils.string_join ", " params) (string_of_proc body)
 
 
@@ -135,7 +135,7 @@ let call_env (params: string list) (args:name list) : name Env.t =
 
 exception Def_NotFound of string
 
-let unfold_call (defs: def Env.t) (def_name:string) (args:name list) : proc =
+let unfold_call (defs: def_proc Env.t) (def_name:string) (args:name list) : proc =
   let def =
     (try
        Env.find def_name defs

@@ -12,6 +12,8 @@ let int = (['1'-'9'] digit*)
 
 let cmt = ('#' [^'\n']*)
 
+let str = "\"[^\"]*\"
+
 let r_def = "def"
 let r_true = "true"
 let r_false = "false"
@@ -110,14 +112,15 @@ let cmd_names = "names"
     | cmd_free { FREE }
     | cmd_bound { BOUND }
     | cmd_names { NAMES }
-	    
+
     | cmd_help { HELP }
     | cmd_quit { QUIT }
-    | ident as id                   
+    | ident as id
 	{ IDENT (id) }
+    | str as s { STRING (s) }
     | eof { EOF }
     | _ { failwith((Lexing.lexeme lexbuf) ^ 
 		      ": mistake at line " ^ string_of_int !line)}
-	
+
 	{
 	}

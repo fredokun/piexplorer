@@ -4,7 +4,7 @@ open Printf
 
 let global_DEF_MAP = Hashtbl.create 32 ;; 
 
-let handle_definition (d:def) : unit =
+let handle_definition (d:def_proc) : unit =
   Hashtbl.add global_DEF_MAP d.name d ;
   printf "Definition '%s' registered.\n" d.name
 
@@ -35,7 +35,7 @@ let handle_deriv_random () : unit =
 let handle_lts (p:proc) : unit =
   not_yet_implemented "lts <proc>"
 
-let handle_lts (f:string) (p:proc) : unit =
+let handle_lts_file (f:string) (p:proc) : unit =
   not_yet_implemented "lts <string> <proc>"
 
 let handle_minimization (p:proc) : unit =
@@ -49,3 +49,10 @@ let handle_bound (p:proc) : unit =
 
 let handle_names (p:proc) : unit =
   not_yet_implemented "names"
+
+let handle_help () : unit =
+  not_yet_implemented "help"
+
+let handle_quit () : unit =
+  not_yet_implemented "quit"
+

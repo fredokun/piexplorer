@@ -4,6 +4,8 @@
   open Utils
   open Pisyntax
 
+  exception Fatal_Parse_Error of string 
+
 %}
 
 /* reserved keywords */
@@ -12,6 +14,7 @@
 /* identifiers */
 %token <string> IDENT
 %token <string> VAR
+%token <string> STRING
 
 /* commands */
 
@@ -70,7 +73,7 @@
       statement:
   | definition
       { Control.handle_definition $1 }
-  | BISIM IN proc TILD proc 
+  | BISIM IN process TILD process
       { Control.handle_is_bisim $3 $5 } 
   | BISIM IN process error
       { raise (Fatal_Parse_Error "missing '~' for strong bisimilarity") }
@@ -103,7 +106,7 @@
   | LTS process
       { Control.handle_lts $2 }
   | LTS STRING process
-      { Control.handle_lts_file $1 $2 }
+      { Control.handle_lts_file $2 $3 }
   | LTS error
       { raise (Fatal_Parse_Error "missing process for LTS") }
   | MINI process
@@ -147,7 +150,7 @@
       { raise (Fatal_Parse_Error "right-hand process missing in sum") }
   | process error
       { raise (Fatal_Parse_Error "missing parallel '||' or sum '+' symbol after process"); }
-  | NEW LPAREN list_of_names RPAREN %prec UNARY process { mk_res $3 $5 }
+  | NEW LPAREN list_of_idents RPAREN %prec UNARY process { mk_res $3 $5 }
   | IDENT LPAREN list_of_names RPAREN { Call($1,$3) }
   | IDENT { Call($1,[]) }
   | LPAREN process RPAREN { $2 }
@@ -159,16 +162,20 @@
   | name IN LPAREN IDENT RPAREN { In($1, $4) }
 
       sep: COMMA {} | DOT {}
-      
-      list_of_names:
+
+      list_of_idents:
   | IDENT { [$1] }
-  | IDENT COMMA list_of_names { $1::$3 }
+  | IDENT COMMA list_of_idents { $1::$3 }
+
+list_of_names:
+  | name { [$1] }
+  | name COMMA list_of_names { $1::$3 }
 
       definition:
-  | DEF IDENT LPAREN list_of_params RPAREN EQUAL process { def { name=$2; params=$4; body=$7 } }
+  | DEF IDENT LPAREN list_of_params RPAREN EQUAL process { { name=$2; params=$4; body=$7 } }
 
       param:
-  | name { $1 }
+  | IDENT { $1 }
 
       list_of_params:
   | /* empty */ { [] }

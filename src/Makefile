@@ -1,41 +1,22 @@
 
-OCAMLC=ocamlc
-OCAMLLEX=ocamllex
-OCAMLYACC=ocamlyacc
+TAR=tar
 
-all: piexplorer
+SOURCES= utils.ml pisyntax.ml control.ml piparser.mly pilexer.mll piexplorer.ml
+RESULT= piexplorer
 
+all: byte-code
 
-utils.cmo: utils.ml
-	$(OCAMLC) -c $< -o $@
+-include OCamlMakefile
 
-pisyntax.cmo: pisyntax.ml utils.cmo
-	$(OCAMLC) -c $< -o $@
-
-control.cmo: control.ml pisyntax.cmo utils.cmo
-	$(OCAMLC) -c $< -o $@
-
-piparser.ml: piparser.mly
-	$(OCAMLYACC) $<
-
-piparser.cmo: piparser.ml pisyntax.cmo
-	$(OCAMLC) -c $< -o $@
-
-pilexer.ml: pilexer.mll piparser.mly
-	$(OCAMLLEX) $<
-
-pilexer.cmo: pilexer.ml piparser.cmo
-	$(OCAMLC) -c $< -o $@
-
-piexplorer: utils.cmo pisyntax.cmo control.cmo piparser.cmo pilexer.cmo piexplorer.ml
-	$(OCAMLC) $? -o $@
-
-
-clean:
-	rm -f *~
-	rm -f *.cmo
-	rm -f *.cmi
+archive: Makefile OCamlMakefile utils.ml pisyntax.ml control.ml piparser.mly pilexer.mll piexplorer.ml
+	mkdir piexplorer-${shell date +%F}
+	mkdir piexplorer-${shell date +%F}/tests
+	cp -f $? piexplorer-${shell date +%F}
+	cp -f tests/*.js piexplorer-${shell date +%F}/tests/
+	$(TAR) cvzf piexplorer-${shell date +%F}.tar.gz piexplorer-${shell date +%F}
+	rm -rf piexplorer-${shell date +%F}
 
 cleanall: clean
+	rm -f *~
 	rm -f piexplorer
-
+	rm -f piexplorer-*.tar.gz
