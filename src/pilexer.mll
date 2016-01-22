@@ -1,7 +1,8 @@
 
 {
+  open Utils
   open Piparser
-  let line=ref 1
+  exception Eof
 
 }
 
@@ -12,7 +13,7 @@ let int = (['1'-'9'] digit*)
 
 let cmt = ('#' [^'\n']*)
 
-let str = "\"[^\"]*\"
+let str = "'\"'[^'\"']*'\"'"
 
 let r_def = "def"
 let r_true = "true"
@@ -74,9 +75,8 @@ let cmd_names = "names"
   rule token = parse
     | ws
 	{token lexbuf}
-    | eol                                
-	{ incr line;
-	  token lexbuf }
+    | eol
+	{ (Lexing.new_line lexbuf) ; (token lexbuf) }
     | cmt
 	{token lexbuf}
     | digit as n
@@ -119,8 +119,4 @@ let cmd_names = "names"
 	{ IDENT (id) }
     | str as s { STRING (s) }
     | eof { EOF }
-    | _ { failwith((Lexing.lexeme lexbuf) ^ 
-		      ": mistake at line " ^ string_of_int !line)}
-
-	{
-	}
+    | _  as lxm   { raise (Parse_Exception (Printf.sprintf "Unexpected character: %c"  lxm,  default_position)) }

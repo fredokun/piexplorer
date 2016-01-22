@@ -4,7 +4,15 @@
   open Utils
   open Pisyntax
 
-  exception Fatal_Parse_Error of string 
+
+  open Lexing
+
+  let current_pos () = make_position (Parsing.symbol_start_pos ()) (Parsing.symbol_end_pos ())
+
+  let parse_error s = (* Called by the parser function on error *)
+    Printf.printf "Error at line %d:\n ==> " (Parsing.symbol_start_pos ()).pos_lnum ;
+    print_endline s;
+    flush stdout
 
 %}
 
@@ -34,7 +42,7 @@
 %token <int> INT
 
 /* punctuation */
-%token LPAREN RPAREN LBRACKET RBRACKET DOT EQUAL EQEQ TILD COLON
+%token LPAREN RPAREN LBRACKET RBRACKET DOT EQUAL EQEQ TILD COLON COMMA
 %token IF THEN ELSE INF SUP INFEQ SUPEQ DIFF DOTDOT LACCOL RACCOL
 
 /* operators */
@@ -68,7 +76,7 @@
     script:
   | EOF { false }
   | statement SEMICOL { true }
-  | statement error { raise (Fatal_Parse_Error "missing ';' after statement") }
+  | statement error { raise (Parse_Exception ("missing ';' after statement", (current_pos ()))) }
 
       statement:
   | definition
@@ -76,25 +84,25 @@
   | BISIM IN process TILD process
       { Control.handle_is_bisim $3 $5 } 
   | BISIM IN process error
-      { raise (Fatal_Parse_Error "missing '~' for strong bisimilarity") }
+      { raise (Parse_Exception ("missing '~' for strong bisimilarity", (current_pos ()))) }
   | BISIM IN process TILD error
-      { raise (Fatal_Parse_Error "missing process after '~' for strong bisimilarity") }
+      { raise (Parse_Exception ("missing process after '~' for strong bisimilarity", (current_pos ()))) }
   | BISIM process TILD process
       { Control.handle_bisim $2 $4 }
   | BISIM process error
-      { raise (Fatal_Parse_Error "missing '~' for strong bisimilarity") }
+      { raise (Parse_Exception ("missing '~' for strong bisimilarity", (current_pos ()))) }
   | BISIM process TILD error
-      { raise (Fatal_Parse_Error "missing process after '~' for strong bisimilarity") }
+      { raise (Parse_Exception ("missing process after '~' for strong bisimilarity", (current_pos ()))) }
   | BISIM error
-      { raise (Fatal_Parse_Error "missing '?' or process before '~' for strong bisimilarity") }
+      { raise (Parse_Exception ("missing '?' or process before '~' for strong bisimilarity", (current_pos ()))) }
   | SBISIM IN process TILD process
       { Control.handle_is_sbisim $3 $5 }
   | SBISIM IN process error
-      { raise (Fatal_Parse_Error "missing '~' for strong bisimilarity") }
+      { raise (Parse_Exception ("missing '~' for strong bisimilarity", (current_pos ()))) }
   | SBISIM IN process TILD error
-      { raise (Fatal_Parse_Error "missing process after '~' for strong bisimilarity") }
+      { raise (Parse_Exception ("missing process after '~' for strong bisimilarity", (current_pos ()))) }
   | SBISIM error
-      { raise (Fatal_Parse_Error "missing '?' or process before '~' for strong bisimilarity") }
+      { raise (Parse_Exception ("missing '?' or process before '~' for strong bisimilarity", (current_pos ()))) }
   | DERIV process
       { Control.handle_deriv $2 }
   | DERIV INT
@@ -102,29 +110,29 @@
   | DERIV
       { Control.handle_deriv_random () }
   | DERIV error
-      { raise (Fatal_Parse_Error "missing process to derivate") }
+      { raise (Parse_Exception ("missing process to derivate", (current_pos ()))) }
   | LTS process
       { Control.handle_lts $2 }
   | LTS STRING process
       { Control.handle_lts_file $2 $3 }
   | LTS error
-      { raise (Fatal_Parse_Error "missing process for LTS") }
+      { raise (Parse_Exception ("missing process for LTS", (current_pos ()))) }
   | MINI process
       { Control.handle_minimization $2 }
   | MINI error
-      {raise (Fatal_Parse_Error "missing process for minimization") }
+      {raise (Parse_Exception ("missing process for minimization", (current_pos ()))) }
   | FREE process
       { Control.handle_free $2 }
   | FREE error
-      { raise (Fatal_Parse_Error "missing process for free names") }
+      { raise (Parse_Exception ("missing process for free names", (current_pos ()))) }
   | BOUND process
       { Control.handle_bound $2 }
   | BOUND error
-      { raise (Fatal_Parse_Error "missing process for bound names") } 
+      { raise (Parse_Exception ("missing process for bound names", (current_pos ()))) }
   | NAMES process
       { Control.handle_names $2 }
   | NAMES error
-      { raise (Fatal_Parse_Error "missing process for names") } 
+      { raise (Parse_Exception ("missing process for names", (current_pos ()))) }
   | HELP
       { Control.handle_help () }
   | QUIT
@@ -133,23 +141,23 @@
       process:
   | INT 
       { if $1 = 0 then Silent 
-        else raise (Fatal_Parse_Error "Only 0 can be used as Silent process") }
+        else raise (Parse_Exception ("Only 0 can be used as Silent process", (current_pos ()))) }
   | END 
       { Silent }
   | prefix { Prefix($1,Silent) }
   | prefix sep process { Prefix($1,$3) }
   | prefix sep error
-      { raise (Fatal_Parse_Error "right-hand process missing after prefix") }
+      { raise (Parse_Exception ("right-hand process missing after prefix", (current_pos ()))) }
   | prefix error
-      { raise (Fatal_Parse_Error "missing ',' or '.' after prefix") }      
+      { raise (Parse_Exception ("missing ',' or '.' after prefix", (current_pos ()))) }
   | process PAR process {  Par($1,$3) }
   | process PAR error
-      { raise (Fatal_Parse_Error "right-hand process missing in parallel") }      
+      { raise (Parse_Exception ("right-hand process missing in parallel", (current_pos ()))) }
   | process PLUS process { Sum($1,$3) }
   | process PLUS error
-      { raise (Fatal_Parse_Error "right-hand process missing in sum") }
+      { raise (Parse_Exception ("right-hand process missing in sum", (current_pos ()))) }
   | process error
-      { raise (Fatal_Parse_Error "missing parallel '||' or sum '+' symbol after process"); }
+      { raise (Parse_Exception ("missing parallel '||' or sum '+' symbol after process", (current_pos ()))) }
   | NEW LPAREN list_of_idents RPAREN %prec UNARY process { mk_res $3 $5 }
   | IDENT LPAREN list_of_names RPAREN { Call($1,$3) }
   | IDENT { Call($1,[]) }
