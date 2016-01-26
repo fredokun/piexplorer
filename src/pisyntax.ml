@@ -10,7 +10,7 @@ open Utils
 **)
 
 type proc =
-  Silent of parse_pos
+  Term of parse_pos
 | Prefix of (act * proc * parse_pos)
 | Sum of (proc * proc * parse_pos)
 | Par of (proc * proc * parse_pos)
@@ -30,10 +30,10 @@ and name =
 | FreshOut of int
 | FreshIn of int
 | Placeholder of string
-
+    
 let pos_of_proc (p:proc) : parse_pos =
   match p with
-  | Silent pos -> pos
+  | Term pos -> pos
   | Prefix (_, _, pos) -> pos
   | Sum (_, _, pos) -> pos
   | Par (_, _, pos) -> pos
@@ -41,12 +41,92 @@ let pos_of_proc (p:proc) : parse_pos =
   | Match (_, _, _, pos) -> pos
   | Mismatch (_, _, _, pos) -> pos
   | Call (_, _, pos) -> pos
-		   
+
+
+(** 
+
+## Name ordering and equality
+
+**)
+
+let name_compare (n:name) (m:name) : int =
+  match (n, m) with
+  | (Static a, Static b) -> String.compare a b
+  | (Static _, _) -> -1
+  | (_, Static _) -> 1
+  | (Private a, Private b) -> String.compare a b
+  | (Private _, _) -> -1
+  | (_, Private _) -> 1
+  | (FreshOut a, FreshOut b) -> Pervasives.compare a b
+  | (FreshOut _, _) -> -1
+  | (_, FreshOut _) -> 1
+  | (FreshIn a, FreshIn b) -> Pervasives.compare a b
+  | (FreshIn _, _) -> -1
+  | (_, FreshIn _) -> 1
+  | (Placeholder a, Placeholder b) -> String.compare a b
+
+let name_eq (a:name) (b:name) : bool =
+  match name_compare a b with
+    | 0 -> true
+    | _ -> false
+
+(** 
+
+## Name sets
+
+**)
+      
+module NameSet = Set.Make (
+  struct
+    type t = name
+    let compare = name_compare
+  end)
+
+let free_names_of_name (pred:name -> bool) (n:name) : NameSet.t =
+  if pred n then (NameSet.singleton n)
+  else NameSet.empty
+  
+let free_names_of_act (pred:name -> bool) (a:act) : NameSet.t =
+  match a with
+    | Tau -> NameSet.empty
+    | Out (a, b) ->
+      NameSet.union (free_names_of_name pred a) (free_names_of_name pred b)
+    | In (a, _) -> free_names_of_name pred a
+      
+let rec free_names (pred:name -> bool) (p:proc) : NameSet.t = 
+  match p with
+    | Term _ -> NameSet.empty
+    | Prefix (a, q, _)
+      -> NameSet.union (free_names_of_act pred a) (free_names pred q)
+    | Par (q, r, _) | Sum (q, r, _)
+      -> NameSet.union (free_names pred q) (free_names pred r)
+    | Match (a, b, q, _) | Mismatch (a, b, q, _) ->
+      NameSet.union
+	(NameSet.union (free_names_of_name pred a) (free_names_of_name pred b))
+	(free_names pred q)
+    | Res (x, p, _) -> NameSet.remove (Placeholder x) (free_names pred p)
+    | Call (_, args, _) -> NameSet.of_list (List.filter pred args)
+
+let free_placeholders (p:proc) : NameSet.t =
+  free_names
+    (fun n -> match n with
+      | Placeholder _ -> true
+      | _ -> false) p
+      
+(**
+
+## Injection of static names
+
+Remark: the parser only generates placeholders. All the unbound placeholders
+become static.
+
+**)
+    
 module StringSet = Set.Make (String)
 
 let rec static_proc (p:proc) (bound:StringSet.t) : proc =
   match p with
-  | Silent _ -> p
+  | Term _ -> p
   | Prefix (Tau, p, pos) -> Prefix (Tau, static_proc p bound, pos)
   | Prefix (Out(a, b), p, pos) -> Prefix (Out(static_name a bound, static_name b bound), static_proc p bound, pos)
   | Prefix (In(a, x), p, pos) -> Prefix (In(static_name a bound, x), static_proc p (StringSet.add x bound), pos)
@@ -77,7 +157,7 @@ let rec mk_res (rs:string list) (p:proc) : proc =
  **)
 
 let rec string_of_proc = function
-  | Silent _ -> "0"
+  | Term _ -> "0"
   | Prefix (a, p, _) -> sprintf "%s.%s" (string_of_act a) (string_of_proc p)
   | Sum (p, q, _) -> sprintf "[%s + %s]" (string_of_proc p) (string_of_proc q)
   | Par (p, q, _) -> sprintf "(%s | %s)" (string_of_proc p) (string_of_proc q)
@@ -96,11 +176,51 @@ and string_of_name = function
   | Private n -> "#" ^ n
   | FreshOut n -> "!" ^ (string_of_int n)
   | FreshIn n -> "?" ^ (string_of_int n)
-  | Placeholder n -> n
+  | Placeholder n -> "<" ^ n ^ ">"
 
 let string_of_def_proc { name; params; body } =
   sprintf "def %s(%s) = %s" name (Utils.string_join ", " params) (string_of_proc body)
 
+(** 
+
+## Basic simplifications
+
+**)
+    
+let simplify_proc_once (p:proc) : proc =
+  match p with
+    | Par (Term _, p, _) -> p
+    | Par (p, Term _, _) -> p
+    | Sum (Term _, p, _) -> p
+    | Sum (p, Term _, _) -> p
+    | Match (a, b, p, _) when a == b -> p
+    | Mismatch (a, b, _, pos) when a == b -> Term pos
+    | Res (x, q, pos) ->
+      if NameSet.mem (Placeholder x) (free_placeholders q) then p
+      else q
+    | _ -> p
+
+let rec simplify_proc (p : proc) : proc =
+  match p with
+    | Prefix (a, p, pos) ->
+      simplify_proc_once (Prefix (a, simplify_proc p, pos))
+    | Par (p, q, pos) ->
+      simplify_proc_once (Par (simplify_proc p,
+			       simplify_proc q,
+			       pos))
+    | Sum (p, q, pos) ->
+      simplify_proc_once (Sum (simplify_proc p,
+			       simplify_proc q,
+			       pos))
+    | Res (x, p, pos) ->
+      simplify_proc_once (Res (x, simplify_proc p, pos))
+    | Match (a, b, p, pos) ->
+      simplify_proc_once (Match (a, b, simplify_proc p, pos))
+    | Mismatch (a, b, p, pos) ->
+      simplify_proc_once (Mismatch (a, b, simplify_proc p, pos))
+    | Call (d, args, pos) ->
+      simplify_proc_once (Call (d, args, pos))
+    | _ -> simplify_proc_once p
 
 (** 
 
@@ -117,7 +237,7 @@ let subst_name (n:name) (env:name Env.t) : name =
   
 let rec subst_proc (p:proc) (env:name Env.t) : proc =
   match p with
-  | Silent _ -> p
+  | Term _ -> p
   | Prefix (Tau, p, pos) -> Prefix (Tau, (subst_proc p env), pos)
   | Prefix (Out (chan, data), p, pos) -> Prefix (Out (subst_name chan env, subst_name data env), subst_proc p env, pos)
   | Prefix (In (chan, var), p, pos) -> Prefix (In (subst_name chan env, var), subst_proc p (Env.remove var env), pos)
@@ -215,9 +335,9 @@ let gensym (prefix:string) =
        
 let rec proc_compare (p:proc) (q:proc) : int =
   match (p, q) with
-  | (Silent _, Silent _) -> 0
-  | (Silent _, _) -> -1
-  | (_, Silent _) -> 1
+  | (Term _, Term _) -> 0
+  | (Term _, _) -> -1
+  | (_, Term _) -> 1
   | (Prefix (a, p, _), Prefix (b, q, _)) ->
     let comp = act_compare a b in
     (match comp with

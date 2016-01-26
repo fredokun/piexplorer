@@ -36,6 +36,7 @@ let op_dot = '.'
 let dotdot = ".."
 let op_plus = '+'
 let op_par = "||"
+let op_par_ccs = '|'
 let op_out = '!'
 let op_in = '?'
 let op_div = '/'
@@ -66,11 +67,14 @@ let cmd_struct = "struct"
 let cmd_bisim = "bisim"
 let cmd_deriv = "deriv"
 let cmd_lts = "lts"
+let cmd_simpl = "simpl"
 let cmd_mini = "mini"
 let cmd_free = "free"
 let cmd_bound = "bound"
 let cmd_names = "names"
 let cmd_parse = "parse"
+let cmd_static = "static"
+let cmd_norm1 = "norm1"
 
   rule token = parse
     | ws
@@ -87,8 +91,9 @@ let cmd_parse = "parse"
     | r_end { END }
     | r_new { NEW }
     | r_tau { TAU }
-    | op_plus { PLUS } 
+    | op_plus { PLUS }
     | op_par { PAR }
+    | op_par_ccs { PAR }
     | op_out { OUT }
     | op_in { IN }
     | colon { COLON }
@@ -112,6 +117,9 @@ let cmd_parse = "parse"
     | cmd_bound { BOUND }
     | cmd_names { NAMES }
     | cmd_parse { PARSE }
+    | cmd_simpl { SIMPL }
+    | cmd_static { STATIC }
+    | cmd_norm1 { NORM1 }
 
     | cmd_help { HELP }
     | cmd_quit { QUIT }

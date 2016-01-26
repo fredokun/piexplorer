@@ -1,7 +1,7 @@
 
 TAR=tar
 
-SOURCES= version.ml utils.ml pisyntax.ml control.ml piparser.mly pilexer.mll piexplorer.ml
+SOURCES= version.ml utils.ml pisyntax.ml pinorm.ml control.ml piparser.mly pilexer.mll piexplorer.ml
 RESULT= piexplorer
 
 all: byte-code

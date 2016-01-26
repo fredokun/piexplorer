@@ -35,6 +35,9 @@
 %token BOUND
 %token NAMES
 %token PARSE
+%token SIMPL
+%token STATIC
+%token NORM1
 
 %token HELP
 %token QUIT
@@ -117,6 +120,18 @@ sep: SEMICOL { () } | DOT { () }
       { Control.handle_parse $2 }
   | PARSE error
       { raise (Parse_Exception ("missing process for PARSE", (current_pos ()))) }
+  | STATIC process
+      { Control.handle_static $2 }
+  | STATIC error
+      { raise (Parse_Exception ("missing process for STATIC", (current_pos ()))) }
+  | SIMPL process
+      { Control.handle_simpl $2 }
+  | SIMPL error
+      { raise (Parse_Exception ("missing process for SIMPL", (current_pos ()))) }
+  | NORM1 process
+      { Control.handle_norm1 $2 }
+  | NORM1 error
+      { raise (Parse_Exception ("missing process for NORM1", (current_pos ()))) }
   | MINI process
       { Control.handle_minimization $2 }
   | MINI error
@@ -140,11 +155,11 @@ sep: SEMICOL { () } | DOT { () }
 
       process:
   | INT 
-      { if $1 = 0 then (Silent (current_pos ())) 
-        else raise (Parse_Exception ("Only 0 can be used as Silent process", (current_pos ()))) }
+      { if $1 = 0 then (Term (current_pos ())) 
+        else raise (Parse_Exception ("Only 0 can be used as Term process", (current_pos ()))) }
   | END 
-      { Silent (current_pos ()) }
-  | prefix { Prefix($1,Silent (current_pos ()), (current_pos ())) }
+      { Term (current_pos ()) }
+  | prefix { Prefix($1,Term (current_pos ()), (current_pos ())) }
   | prefix sep process { Prefix($1,$3, (current_pos ())) }
   | prefix sep error
       { raise (Parse_Exception ("right-hand process missing after prefix", (current_pos ()))) }

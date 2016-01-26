@@ -1,6 +1,7 @@
+open Printf
 
 open Pisyntax
-open Printf
+open Pinorm
 
 let script_mode = ref false ;;
 
@@ -40,6 +41,18 @@ let handle_lts (p:proc) : unit =
 let handle_parse (p:proc) : unit =
   printf "Parsed process:\n" ;
   printf "%s\n" (string_of_proc p)
+
+let handle_static (p:proc) : unit =
+  printf "Static process:\n" ;
+  printf "%s\n" (string_of_proc (static_proc p (StringSet.empty)))
+
+let handle_simpl (p:proc) : unit =
+  printf "Simplified process:\n" ;
+  printf "%s\n" (string_of_proc (simplify_proc (static_proc p (StringSet.empty))))
+
+let handle_norm1 (p:proc) : unit =
+  printf "Normalized process (step 1):\n" ;
+  printf "%s\n" (string_of_nproc (norm1 (simplify_proc (static_proc p (StringSet.empty)))))
 
 let handle_lts_file (f:string) (p:proc) : unit =
   not_yet_implemented "lts <string> <proc>"
