@@ -2,7 +2,7 @@
 open Printf
 
 open Utils
-       
+
 (**
 
 ## Syntax representation
@@ -30,7 +30,7 @@ and name =
 | FreshOut of int
 | FreshIn of int
 | Placeholder of string
-    
+
 let pos_of_proc (p:proc) : parse_pos =
   match p with
   | Term pos -> pos
@@ -43,7 +43,7 @@ let pos_of_proc (p:proc) : parse_pos =
   | Call (_, _, pos) -> pos
 
 
-(** 
+(**
 
 ## Name ordering and equality
 
@@ -70,12 +70,12 @@ let name_eq (a:name) (b:name) : bool =
     | 0 -> true
     | _ -> false
 
-(** 
+(**
 
 ## Name sets
 
 **)
-      
+
 module NameSet = Set.Make (
   struct
     type t = name
@@ -85,14 +85,14 @@ module NameSet = Set.Make (
 let free_names_of_name (pred:name -> bool) (n:name) : NameSet.t =
   if pred n then (NameSet.singleton n)
   else NameSet.empty
-  
+
 let free_names_of_act (pred:name -> bool) (a:act) : NameSet.t =
   match a with
     | Tau -> NameSet.empty
     | Out (a, b) ->
       NameSet.union (free_names_of_name pred a) (free_names_of_name pred b)
     | In (a, _) -> free_names_of_name pred a
-      
+
 let rec free_names (pred:name -> bool) (p:proc) : NameSet.t = 
   match p with
     | Term _ -> NameSet.empty
@@ -112,7 +112,7 @@ let free_placeholders (p:proc) : NameSet.t =
     (fun n -> match n with
       | Placeholder _ -> true
       | _ -> false) p
-      
+
 (**
 
 ## Injection of static names
@@ -121,7 +121,7 @@ Remark: the parser only generates placeholders. All the unbound placeholders
 become static.
 
 **)
-    
+
 module StringSet = Set.Make (String)
 
 let rec static_proc (p:proc) (bound:StringSet.t) : proc =
@@ -181,12 +181,44 @@ and string_of_name = function
 let string_of_def_proc { name; params; body } =
   sprintf "def %s(%s) = %s" name (Utils.string_join ", " params) (string_of_proc body)
 
-(** 
+(**
 
 ## Basic simplifications
 
 **)
-    
+
+let rec percolate_restrictions (p:proc) : prop =
+  match p with
+  | Res (x, q, ppos) ->
+     let q' = percolate_restrictions q in
+     (match q' with
+      | Prefix (act, r, qpos) ->
+         if NameSet.mem (Placeholder x) (free_placeholders (Prefix act, Term qpos, qpos))
+         then Res (x, q', ppos) (* percolation stops *)
+         else Prefix (act, percolate_restrictions (Res x, r, ppos), qpos)
+      | Sum (r1, r2, qpos) ->
+         (match (NameSet.mem (Placeholder x) (free_placeholders r1),
+                 NameSet.mem (Placeholder x) (free_placeholders r2)) with
+          | (true, true) -> Res (x, q', ppos) (* percolation stops *)
+          | (true, false) -> Sum (percolate_restrictions (Res (x, r1, ppos)),
+                                  r2, qpos)
+          | (false, true) -> Sum (r1,
+                                  percolate_restrictions (Res (x, r2, ppos)),
+                                  qpos)
+          | (false, false) -> q')
+      | Par (r1, r2, qpos) ->
+         (match (NameSet.mem (Placeholder x) (free_placeholders r1),
+                 NameSet.mem (Placeholder x) (free_placeholders r2)) with
+          | (true, true) -> Res (x, q', ppos) (* percolation stops *)
+          | (true, false) -> Par (percolate_restrictions (Res (x, r1, ppos)),
+                                  r2, qpos)
+          | (false, true) -> Par (r1,
+                                  percolate_restrictions (Res (x, r2, ppos)),
+                                  qpos)
+          | (false, false) -> q')
+      | Res (y, r, qpos) -> if x == y then q' else Res (y, percolate_restrictions (Res x, r, ppos), qpos)
+      | Match (a, b, p, qpos) -> 
+
 let simplify_proc_once (p:proc) : proc =
   match p with
     | Par (Term _, p, _) -> p
@@ -222,19 +254,19 @@ let rec simplify_proc (p : proc) : proc =
       simplify_proc_once (Call (d, args, pos))
     | _ -> simplify_proc_once p
 
-(** 
+(**
 
 ## Substitutions
 
 **)
-    
+
 module Env = Map.Make (String)
 
 let subst_name (n:name) (env:name Env.t) : name =
   match n with
   | Placeholder x -> Env.find x env
   | _ -> n
-  
+
 let rec subst_proc (p:proc) (env:name Env.t) : proc =
   match p with
   | Term _ -> p
@@ -253,7 +285,7 @@ let rec subst_proc (p:proc) (env:name Env.t) : proc =
   ## Call unfolding
 
 **)
-    
+
 exception TooManyParams
 exception TooManyArgs
 
@@ -274,9 +306,9 @@ let unfold_call (defs: def_proc Env.t) (def_name:string) (args:name list) : proc
        Env.find def_name defs
      with Not_found -> raise (Def_NotFound def_name)) in
   subst_proc def.body (call_env def.params args)
-    
+
 (**
-   
+
    ## Comparisons
 
 **)
@@ -307,7 +339,7 @@ let rec names_compare (ns:name list) (ms:name list) : int =
     (match comp with
     | 0 -> names_compare ns' ms'
     | _ -> comp)
-    
+
 let act_compare (a:act) (b:act) : int =
   match (a, b) with
   | (Tau, Tau) -> 0

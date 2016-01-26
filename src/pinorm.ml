@@ -41,7 +41,7 @@ and string_of_cond (c:cond) : string =
     | CEq (a, b) -> sprintf "%s=%s" (string_of_name a) (string_of_name b)
     | CNeq (a, b) -> sprintf "%s<>%s" (string_of_name a) (string_of_name b)
 
-    
+
 let rec norm1 (p:proc) : nproc =
   match p with
     | Term _ -> NTerm
@@ -79,10 +79,4 @@ let rec norm1 (p:proc) : nproc =
 	| _ -> NCond ([CNeq (a, b)], np))
     | Call (d, args, _) -> NCall (d, args)
 
-      
-	
-	
-  
-       
 
-  
