@@ -31,6 +31,7 @@ and name =
 | FreshIn of int
 | Placeholder of string
 
+
 let pos_of_proc (p:proc) : parse_pos =
   match p with
   | Term pos -> pos
@@ -187,37 +188,60 @@ let string_of_def_proc { name; params; body } =
 
 **)
 
-let rec percolate_restrictions (p:proc) : prop =
+let rec percolate_restrictions (p:proc) : proc =
   match p with
   | Res (x, q, ppos) ->
      let q' = percolate_restrictions q in
      (match q' with
+      | Term qpos -> (Res (x, q', ppos))
       | Prefix (act, r, qpos) ->
-         if NameSet.mem (Placeholder x) (free_placeholders (Prefix act, Term qpos, qpos))
-         then Res (x, q', ppos) (* percolation stops *)
-         else Prefix (act, percolate_restrictions (Res x, r, ppos), qpos)
-      | Sum (r1, r2, qpos) ->
-         (match (NameSet.mem (Placeholder x) (free_placeholders r1),
-                 NameSet.mem (Placeholder x) (free_placeholders r2)) with
-          | (true, true) -> Res (x, q', ppos) (* percolation stops *)
-          | (true, false) -> Sum (percolate_restrictions (Res (x, r1, ppos)),
-                                  r2, qpos)
-          | (false, true) -> Sum (r1,
-                                  percolate_restrictions (Res (x, r2, ppos)),
-                                  qpos)
-          | (false, false) -> q')
-      | Par (r1, r2, qpos) ->
-         (match (NameSet.mem (Placeholder x) (free_placeholders r1),
-                 NameSet.mem (Placeholder x) (free_placeholders r2)) with
-          | (true, true) -> Res (x, q', ppos) (* percolation stops *)
-          | (true, false) -> Par (percolate_restrictions (Res (x, r1, ppos)),
-                                  r2, qpos)
-          | (false, true) -> Par (r1,
-                                  percolate_restrictions (Res (x, r2, ppos)),
-                                  qpos)
-          | (false, false) -> q')
-      | Res (y, r, qpos) -> if x == y then q' else Res (y, percolate_restrictions (Res x, r, ppos), qpos)
-      | Match (a, b, p, qpos) -> 
+         if NameSet.mem (Placeholder x) (free_placeholders (Prefix (act, (Term qpos), qpos)))
+         then (Res (x, q', ppos)) (* percolation stops *)
+
+         else Prefix (act, percolate_restrictions (Res (x, r, ppos)), qpos)
+  | Sum (r1, r2, qpos) ->
+     (match (NameSet.mem (Placeholder x) (free_placeholders r1),
+             NameSet.mem (Placeholder x) (free_placeholders r2)) with
+      | (true, true) -> Res (x, q', ppos) (* percolation stops *)
+      | (true, false) -> Sum (percolate_restrictions (Res (x, r1, ppos)),
+                             r2, qpos)
+      | (false, true) -> Sum (r1,
+                             percolate_restrictions (Res (x, r2, ppos)),
+                             qpos)
+      | (false, false) -> q')
+
+  | Par (r1, r2, qpos) ->
+     (match (NameSet.mem (Placeholder x) (free_placeholders r1),
+             NameSet.mem (Placeholder x) (free_placeholders r2)) with
+      | (true, true) -> Res (x, q', ppos) (* percolation stops *)
+      | (true, false) -> Par (percolate_restrictions (Res (x, r1, ppos)),
+                             r2, qpos)
+      | (false, true) -> Par (r1,
+                             percolate_restrictions (Res (x, r2, ppos)),
+                             qpos)
+      | (false, false) -> q')
+  | Res (y, r, qpos) -> if x == y then q' else Res (y, percolate_restrictions (Res (x, r, ppos)), qpos)
+  | Match (a, b, p, qpos) ->
+	 if NameSet.mem (Placeholder x) (free_placeholders (Match (a, b, (Term qpos), qpos)))
+	 then Res (x, q', ppos) (* percolation stop *)
+	 else Match (a, b, percolate_restrictions (Res (x, p, ppos)), qpos)
+      | Mismatch (a, b, p, qpos) ->
+	 if NameSet.mem (Placeholder x) (free_placeholders (Mismatch (a, b, (Term qpos), qpos)))
+	 then Res (x, q', ppos) (* percolation stop *)
+	 else Mismatch (a, b, percolate_restrictions (Res (x, p, ppos)), qpos)
+      | Call _ -> Res (x, q', ppos))
+  | Par (p, q, ppos) -> Par (percolate_restrictions p,
+			    percolate_restrictions q,
+			    ppos)
+  | Sum (p, q, ppos) -> Sum (percolate_restrictions p,
+			    percolate_restrictions q,
+			    ppos)
+  | Match (a, b, p, ppos) -> Match (a, b, percolate_restrictions p, ppos)
+  | Mismatch (a, b, p, ppos) -> Mismatch (a, b, percolate_restrictions p, ppos)
+		   
+  | _ -> p
+
+
 
 let simplify_proc_once (p:proc) : proc =
   match p with

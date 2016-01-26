@@ -54,6 +54,10 @@ let handle_norm1 (p:proc) : unit =
   printf "Normalized process (step 1):\n" ;
   printf "%s\n" (string_of_nproc (norm1 (simplify_proc (static_proc p (StringSet.empty)))))
 
+let handle_perco (p:proc) : unit =
+  printf "Process with percolated restrictions:\n" ;
+  printf "%s\n" (string_of_proc (percolate_restrictions (simplify_proc (static_proc p (StringSet.empty)))))
+
 let handle_lts_file (f:string) (p:proc) : unit =
   not_yet_implemented "lts <string> <proc>"
 

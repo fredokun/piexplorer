@@ -74,6 +74,7 @@ let cmd_bound = "bound"
 let cmd_names = "names"
 let cmd_parse = "parse"
 let cmd_static = "static"
+let cmd_perco = "perco"
 let cmd_norm1 = "norm1"
 
   rule token = parse
@@ -120,6 +121,7 @@ let cmd_norm1 = "norm1"
     | cmd_simpl { SIMPL }
     | cmd_static { STATIC }
     | cmd_norm1 { NORM1 }
+    | cmd_perco { PERCO }
 
     | cmd_help { HELP }
     | cmd_quit { QUIT }

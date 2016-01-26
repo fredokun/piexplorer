@@ -38,6 +38,7 @@
 %token SIMPL
 %token STATIC
 %token NORM1
+%token PERCO
 
 %token HELP
 %token QUIT
@@ -132,6 +133,10 @@ sep: SEMICOL { () } | DOT { () }
       { Control.handle_norm1 $2 }
   | NORM1 error
       { raise (Parse_Exception ("missing process for NORM1", (current_pos ()))) }
+  | PERCO process
+      { Control.handle_perco $2 }
+  | PERCO error
+      { raise (Parse_Exception ("missing process for PERCO", (current_pos ()))) }
   | MINI process
       { Control.handle_minimization $2 }
   | MINI error
