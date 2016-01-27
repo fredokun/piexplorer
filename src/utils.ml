@@ -22,9 +22,12 @@ let string_of_pos pos =
   sprintf "%d:%d => %d:%d"
           pos.start_pos.pos_lnum pos.start_pos.pos_cnum
           pos.end_pos.pos_lnum pos.end_pos.pos_lnum
-	  
+
 (* string utilities *)
 
+module StringSet = Set.Make (String)
+
+module StringMap = Map.Make (String)
 
 let rec string_join (sep:string) (l:string list) : string =
   match l with

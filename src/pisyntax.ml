@@ -123,7 +123,6 @@ become static.
 
 **)
 
-module StringSet = Set.Make (String)
 
 let rec static_proc (p:proc) (bound:StringSet.t) : proc =
   match p with
@@ -238,7 +237,6 @@ let rec percolate_restrictions (p:proc) : proc =
 			    ppos)
   | Match (a, b, p, ppos) -> Match (a, b, percolate_restrictions p, ppos)
   | Mismatch (a, b, p, ppos) -> Mismatch (a, b, percolate_restrictions p, ppos)
-		   
   | _ -> p
 
 
