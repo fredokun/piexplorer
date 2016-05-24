@@ -1,0 +1,9 @@
+
+def Switch3(in, out, c1, c2, c3) =
+  in?(x), (  [x=c1] out!c1
+           + [x=c2] out!c2
+           + [x=c3] out!c3 )
+
+
+Switch3(in, out, c1, c2, c3)
+

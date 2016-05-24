@@ -1,0 +1,17 @@
+
+/* ported from HAL */
+
+def Cell(i,o) = i?(c) .o!c.Cell(i,o)
+
+def Buffer1(in,out) = Cell(in,out)
+def Buffer2(in,out) = new(c) (Cell(in,c) || Buffer1(c,out))
+def Buffer3(in,out) = new(c) (Cell(in,c) || Buffer2(c,out))
+def Buffer4(in,out) = new(c) (Cell(in,c) || Buffer3(c,out))
+def Buffer5(in,out) = new(c) (Cell(in,c) || Buffer4(c,out))
+def Buffer6(in,out) = new(c) (Cell(in,c) || Buffer5(c,out))
+def Buffer7(in,out) = new(c) (Cell(in,c) || Buffer6(c,out))
+def Buffer8(in,out) = new(c) (Cell(in,c) || Buffer7(c,out))
+
+// exemple process:
+// Buffer8(in, out)
+

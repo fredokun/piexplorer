@@ -1,0 +1,56 @@
+
+def Switch3(in, out, c1, c2, c3) =
+  (in?(x). x!x.0) || (c1?(z).out!c1.0
+              || c2?(z).out!c2.0
+              || c3?(z).out!c3.0)
+
+
+def Switch6(in, out, c1, c2, c3, c4, c5, c6) =
+  (in?(x). x!x.0) || (c1?(z).out!c1.0
+              || c2?(z).out!c2.0
+              || c3?(z).out!c3.0
+              || c4?(z).out!c4.0
+              || c5?(z).out!c5.0
+              || c6?(z).out!c6.0)
+
+def Switch8(in, out, c1, c2, c3, c4, c5, c6, c7, c8) =
+  (in?(x). x!x.0) || (c1?(z).out!c1.0
+              || c2?(z).out!c2.0
+              || c3?(z).out!c3.0
+              || c4?(z).out!c4.0
+              || c5?(z).out!c5.0
+              || c6?(z).out!c6.0
+              || c7?(z).out!c7.0
+              || c8?(z).out!c8.0)
+
+
+def Switch10(in, out, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) =
+  (in?(x). x!x.0) || (c1?(z).out!c1.0
+              || c2?(z).out!c2.0
+              || c3?(z).out!c3.0
+              || c4?(z).out!c4.0
+              || c5?(z).out!c5.0
+              || c6?(z).out!c6.0
+              || c7?(z).out!c7.0
+              || c8?(z).out!c8.0
+              || c9?(z).out!c9.0
+              || c10?(z).out!c10.0)
+
+
+
+// Switch3(in, out, c1, c2, c3)
+// 138 states,  185 transitions
+// min: 83 nodes
+
+// Switch6(in, out, c1, c2, c3, c4, c5, c6)
+// 831 states, 1007 transitions
+// min: 215 nodes
+
+// Switch8(in, out, c1, c2, c3, c4, c5, c6, c7, c8)
+// 1843 states and 2150 transitions
+// min: 333 nodes
+
+// Switch10(in, out, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10)
+// 3463 states and 3937 transitions
+// min: 475 nodes
+

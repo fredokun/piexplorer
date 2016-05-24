@@ -1,0 +1,7 @@
+
+// quelques exemples de base
+
+def Priv1() = [new(a) c!a.c!a.a!b] || d?(x).x!b
+
+
+

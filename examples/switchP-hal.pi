@@ -1,0 +1,50 @@
+define Switch3(in, out, c1, c2, c3) =
+  (in?(x). x!x.nil) | (c1?(z).out!c1.nil
+              | c2?(z).out!c2.nil
+              | c3?(z).out!c3.nil)
+
+
+define Switch6(in, out, c1, c2, c3, c4, c5, c6) =
+  (in?(x). x!x.nil) | (c1?(z).out!c1.nil
+              | c2?(z).out!c2.nil
+              | c3?(z).out!c3.nil
+              | c4?(z).out!c4.nil
+              | c5?(z).out!c5.nil
+              | c6?(z).out!c6.nil)
+
+define Switch8(in, out, c1, c2, c3, c4, c5, c6, c7, c8) =
+  (in?(x). x!x.nil) | (c1?(z).out!c1.nil
+              | c2?(z).out!c2.nil
+              | c3?(z).out!c3.nil
+              | c4?(z).out!c4.nil
+              | c5?(z).out!c5.nil
+              | c6?(z).out!c6.nil
+              | c7?(z).out!c7.nil
+              | c8?(z).out!c8.nil)
+#  pi-to-hd:  33 seconds  (5629 nodes)
+#  hd-to-aut: 180 seconds (85293 nodes)
+#  min: 85293 nodes
+
+
+define Switch10(in, out, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) =
+  (in?(x). x!x.nil) | (c1?(z).out!c1.nil
+              | c2?(z).out!c2.nil
+              | c3?(z).out!c3.nil
+              | c4?(z).out!c4.nil
+              | c5?(z).out!c5.nil
+              | c6?(z).out!c6.nil
+              | c7?(z).out!c7.nil
+              | c8?(z).out!c8.nil
+              | c9?(z).out!c9.nil
+              | c10?(z).out!c10.nil)
+#  not enough memory after 30mn
+
+
+# const in
+# const out
+
+# build Switch3
+# build Switch6
+build Switch8
+# build Switch10
+
