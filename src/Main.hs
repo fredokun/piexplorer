@@ -1,5 +1,7 @@
 
 
+import Control.Exception ( IOException, try, displayException )
+
 import System.IO
 import Data.Char
 import Data.Set (Set)
@@ -272,8 +274,11 @@ doGenGraph src expr defEnv =
 
 doLoadFile:: InputMode -> (DefEnv ASTInfo) -> String -> IO ()
 doLoadFile inputMode defEnv fname =
-  (do defEnv' <- withFile fname ReadMode (loadFile defEnv)
-      repl inputMode defEnv')
+  (do result <- try $ withFile fname ReadMode (loadFile defEnv)
+      case result of
+        Left exc -> do putStrLn $ "Load error: " ++ (displayException (exc::IOException))
+                       repl inputMode defEnv
+        Right defEnv' -> repl inputMode defEnv')
   where loadFile:: DefEnv ASTInfo -> Handle -> IO (DefEnv ASTInfo)
         loadFile defEnv hfile =
           do content <- hGetContents hfile
