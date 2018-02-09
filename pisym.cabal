@@ -17,7 +17,18 @@ cabal-version:       >=1.10
 
 executable pisym
   main-is:             Main.hs
-  -- other-modules: Syntax.hs Parser.hs Semop.hs Utils.hs
+  -- other-modules:       Syntax.hs Parser.hs Semop.hs Utils.hs
+  other-modules:       Syntax
+                     , Env
+                     , Rel
+                     , Dist
+                     , GenGraph
+                     , Parser
+                     , Semop
+                     , Simul
+                     , Symbolic
+                     , Utils
+                     , Equiv
   -- other-extensions:
   build-depends:       HUnit >=1.2
 -- && <2.0
