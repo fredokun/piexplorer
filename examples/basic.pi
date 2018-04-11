@@ -17,5 +17,8 @@ def ITE(x,a,b,c,m) =  ([x=a] b!m) + ([x<>a] c!m)
 def MM(x,a,d) = new(m) ( new(b) ( new (c) ( ITE(x,a,b,c,m) || (b?(y).d!y.0) || (c?(y).tau.0) )) )
 
 // read-write causality
+def RW1(c) = new(a) (c?(x). c!a . [x = a] tau.0)
+def RW2(c) = new(a) (c!a . c?(x). [x = a] tau.0)
+
 
 

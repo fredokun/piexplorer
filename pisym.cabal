@@ -29,6 +29,7 @@ executable pisym
                      , Symbolic
                      , Utils
                      , Equiv
+                     , Causality
   -- other-extensions:
   build-depends:       HUnit >=1.2
 -- && <2.0

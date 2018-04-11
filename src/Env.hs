@@ -31,6 +31,10 @@ initEnv ns = Env (initEquiv ns) emptyDist
 namesInEnv :: Env -> Set Name
 namesInEnv (Env eq _) = namesInEquiv eq   -- Note: distinctions are about the names in equivalence
 
+{- TODO
+matchable :: Name -> Name -> Env -> Bool
+matchable a b (Env eq diff)]]@
+-}
 
 envRealName:: Name -> Env -> Name
 envRealName n (Env eq _) = realName n eq
