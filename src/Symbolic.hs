@@ -33,9 +33,9 @@ data Label = Tau
 
 showLabel:: Label -> String
 showLabel Tau = "tau"
-showLabel (Out chan datum) = (show chan) ++ "!" ++ (show datum)
-showLabel (In chan var) = (show chan) ++ "?(" ++ var ++ ")"
-showLabel (BoundOut chan datum) = (show chan) ++ "!(" ++ (show datum) ++ ")"
+showLabel (Out chan datum) = (show chan) ++ "<" ++ (show datum) ++ ">"
+showLabel (In chan var) = (show chan) ++ "(" ++ var ++ ")"
+showLabel (BoundOut chan datum) = (show chan) ++ "<(" ++ (show datum) ++ ")>"
 
 instance Show Label where
   show = showLabel

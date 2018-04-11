@@ -331,11 +331,18 @@ dynamicNames p = collectNames p nameDynamic
 -}
 
 substName:: Name -> Map Name Name -> Name
+substName n env =
+  case Map.lookup n env of
+    Just m -> m
+    Nothing -> n
+
+{- -- doesn't work for private names
 substName n@(PlaceHolder _) env =
   case Map.lookup n env of
     Just m -> m
     Nothing -> n
 substName n _ = n
+-}
 
 substProc:: Process a -> Map Name Name -> Process a
 substProc (Term info) _ = Term info

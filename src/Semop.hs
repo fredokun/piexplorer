@@ -33,7 +33,7 @@ showAction:: Action -> String
 showAction TauAct = "tau"
 showAction (OutAct chan datum) = (show chan) ++ "<" ++ (show datum) ++ ">"
 showAction (InAct chan input) = (show chan) ++ "(" ++ (show input) ++ ")"
-showAction (EscapeAct chan name) = (show chan) ++ "<(" ++ (show name) ++ ")>"
+showAction (EscapeAct chan name) = (show chan) ++ "<#" ++ (show name) ++ ">"
 
 data Transition a = Transition Action (State a) deriving (Eq, Ord)
 

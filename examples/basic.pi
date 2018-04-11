@@ -5,5 +5,17 @@ def CPR(b,m) = new(c) ( (c?(x).x!m.0) || new(d) ( (c!d.0) || (d?(y).b!y.0)))
 // channel-passing, labelled semantics
 def CPL(b,d,m) = new(c) ( (c?(x).x!m.0) || (c!d.0) || (d?(y).b!y.0))
 
+// fresh name generator, single name
+def RPT(c,a) = c!a.RPT(c,a)
+def GEN1(c) = new(a) RPT(c,a)
+
+// fresh name generator, infinite
+def GEN(c) = new(a) c!a.GEN(c)
+
+// match/mismatch example
+def ITE(x,a,b,c,m) =  ([x=a] b!m) + ([x<>a] c!m)
+def MM(x,a,d) = new(m) ( new(b) ( new (c) ( ITE(x,a,b,c,m) || (b?(y).d!y.0) || (c?(y).tau.0) )) )
+
+// read-write causality
 
 

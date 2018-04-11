@@ -44,7 +44,7 @@ langDef = Tok.LanguageDef
   , Tok.opLetter        = oneOf ""
   , Tok.reservedNames   = [ "def", "end", "tau", "new"
                           ]
-  , Tok.reservedOpNames = [ ",", ".", "?", "!", "=" ]
+  , Tok.reservedOpNames = [ ",", ".", "?", "!", "=", "<>", "#" ]
   , Tok.caseSensitive   = True
   }
 
@@ -121,8 +121,7 @@ mkBin cons p q = case (procInfo p, procInfo q) of
 
 procSimple    =  parens procExpr
                  <|> procEnd <|> procZero
-                 <|> matchProcess
-                 <|> mismatchProcess
+                 <|> mmProcess
                  <|> brackets procExpr
                  <|> resProcess
                  <|> (try prefixProcess)
@@ -168,6 +167,22 @@ inAction:: String -> Parser Action
 inAction chan = do var <- parens identifier
                    return $ ActIn (Static chan) var
 
+data MatchOp = MATCH | MISMATCH
+
+mmProcess:: Parser (Process ASTInfo)
+mmProcess = do startPos <- getPosition
+               _ <- reservedOp "["
+               a <- identifier
+               matchOp <- (do { (reservedOp "=" ) ; return MATCH }
+                           <|> do { (reservedOp "<>") ; return MISMATCH })
+               b <- identifier
+               _ <- reservedOp "]"
+               p <- procSimple
+               endPos <- getPosition
+               return $ case matchOp of
+                          MATCH -> (Match (Static a) (Static b) p (ASTInfo startPos endPos))
+                          MISMATCH -> (Mismatch (Static a) (Static b) p (ASTInfo startPos endPos))
+
 matchProcess:: Parser (Process ASTInfo)
 matchProcess = do startPos <- getPosition
                   _ <- reservedOp "["
@@ -183,7 +198,7 @@ mismatchProcess:: Parser (Process ASTInfo)
 mismatchProcess = do startPos <- getPosition
                      _ <- reservedOp "["
                      a <- identifier
-                     _ <- reservedOp "<>"
+                     _ <- reservedOp "#"
                      b <- identifier
                      _ <- reservedOp "]"
                      p <- procSimple
