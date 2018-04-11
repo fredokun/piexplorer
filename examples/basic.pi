@@ -1,7 +1,9 @@
 
-// quelques exemples de base
+// channel-passing, reduction semantics
+def CPR(b,m) = new(c) ( (c?(x).x!m.0) || new(d) ( (c!d.0) || (d?(y).b!y.0)))
 
-def Priv1() = [new(a) c!a.c!a.a!b] || d?(x).x!b
+// channel-passing, labelled semantics
+def CPL(b,d,m) = new(c) ( (c?(x).x!m.0) || (c!d.0) || (d?(y).b!y.0))
 
 
 
