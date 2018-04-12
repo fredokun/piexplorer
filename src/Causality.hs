@@ -25,6 +25,9 @@ showCausal (CausalOrder cs) = concats $ intersperse "," (Map.foldrWithKey foldSh
 instance Show CausalOrder where
   show c = "CausalOrder{" ++ (showCausal c) ++ "}"
 
+emptyCausal :: CausalOrder
+emptyCausal = CausalOrder Map.empty
+
 causalFreshOut :: CausalOrder -> Name -> CausalOrder
 causalFreshOut (CausalOrder cs) o@(FreshOut _) = CausalOrder $ Map.insert o Set.empty cs
 causalFreshOut _ _ = error "causalFreshOut only works for fresh outputs"
@@ -49,5 +52,18 @@ causalCollect (CausalOrder cs) i@(FreshIn _) =
   CausalOrder $ Map.foldrWithKey foldCollect Map.empty cs
   where foldCollect :: Name -> (Set Name) -> (Map Name (Set Name)) -> (Map Name (Set Name))
         foldCollect o is cs = Map.insert o (Set.delete i is) cs
-
+causalCollect cs _ = cs
         
+cleanupCausal :: CausalOrder -> Set Name -> CausalOrder
+cleanupCausal causal names = Set.fold  (\n causal -> causalCollect causal n) causal names
+
+causalReplaceName :: Name -> Name -> CausalOrder -> CausalOrder
+causalReplaceName i1@(FreshIn _) i2@(FreshIn _) (CausalOrder cs) =
+  CausalOrder $ Map.foldrWithKey foldReplace Map.empty cs
+  where foldReplace o is cs  = if Set.member i1 is
+                               then Map.insert o (Set.insert i2 (Set.delete i1 is)) cs
+                               else Map.insert o is cs
+causalReplaceName i@(FreshIn _) o@(FreshOut _) (CausalOrder cs) =
+  CausalOrder $ Map.foldrWithKey foldRemove Map.empty cs
+  where foldRemove o is cs = Map.insert o (Set.delete i is) cs
+causalReplaceName _ _ causal = causal

@@ -48,8 +48,12 @@ initState p = State (initEnv (allNames p)) p
 
 refineEnv:: Env -> Guard -> Maybe Env
 refineEnv env GTrue = Just env
-refineEnv env (GEq n m) = equalizeNames n m env
-refineEnv env (GIneq n m) = distinguishNames n m env
+refineEnv env (GEq n m) = if matchable n m env
+                          then equalizeNames n m env
+                          else Nothing
+refineEnv env (GIneq n m) = if mismatchable n m env
+                            then distinguishNames n m env
+                            else Nothing
 refineEnv env (GConj g1 g2) = do env' <- refineEnv env g1
                                  refineEnv env' g2 
 
