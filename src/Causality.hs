@@ -3,7 +3,7 @@ module Causality where
 
 import Data.List
 
-import Data.Map (Map)
+import Data.Map (Map, (!))
 import qualified Data.Map as Map
 
 import Data.Set (Set)
@@ -41,4 +41,13 @@ causeOf (CausalOrder cs) o@(FreshOut _) i@(FreshIn _) =
     Nothing -> error $ "No such fresh output name: " ++ (show o)
 causeOf _ _ _ = error "o `causeOf` i only works if o is fresh output and i a fresh input"
 
+causalCollect :: CausalOrder -> Name -> CausalOrder
+causalCollect (CausalOrder cs) o@(FreshOut _) =
+  let _ = cs ! o
+  in CausalOrder $ Map.delete o cs
+causalCollect (CausalOrder cs) i@(FreshIn _) =
+  CausalOrder $ Map.foldrWithKey foldCollect Map.empty cs
+  where foldCollect :: Name -> (Set Name) -> (Map Name (Set Name)) -> (Map Name (Set Name))
+        foldCollect o is cs = Map.insert o (Set.delete i is) cs
 
+        
