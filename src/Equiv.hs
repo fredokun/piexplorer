@@ -38,6 +38,7 @@ initEquiv ns = Set.fold finit emptyEquiv ns
         finit _ res = res
 
 realName:: Name -> Equiv -> Name
+realName n@(Priv _) _ = n
 realName n (Equiv eq) =
   -- trace ("realName: " ++ (show n) ++ " in " ++ (show eq) ++ " ?") $
   case Map.lookup n eq of
