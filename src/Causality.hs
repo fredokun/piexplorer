@@ -55,7 +55,11 @@ causalCollect (CausalOrder cs) i@(FreshIn _) =
 causalCollect cs _ = cs
         
 cleanupCausal :: CausalOrder -> Set Name -> CausalOrder
-cleanupCausal causal names = Set.fold  (\n causal -> causalCollect causal n) causal names
+cleanupCausal (CausalOrder cs) names =
+  CausalOrder $ Map.foldrWithKey (\o is cs ->
+                                    if Set.member o names
+                                    then (Map.insert o (Set.intersection is names) cs)
+                                    else cs) Map.empty cs
 
 causalReplaceName :: Name -> Name -> CausalOrder -> CausalOrder
 causalReplaceName i1@(FreshIn _) i2@(FreshIn _) (CausalOrder cs) =

@@ -74,21 +74,24 @@ liftTrans (State env p) (SymTrans External g act q) =
             (State (clean env q) q)
 
           doAct env (In chan var) q = 
-            let (env', freshIn) = genFreshInput env
-            in let q' = substProc q (Map.singleton (PlaceHolder var) freshIn)
+            let (env', freshIn) = trace "Generate fresh input" $ genFreshInput env
+            in let q' = trace (" ==> updated env' = " ++ (show env')) $ substProc q (Map.singleton (PlaceHolder var) freshIn)
+                   env'' = trace (" ==> updated env'' = " ++ (show (clean env' q'))) $ clean env' q'
                in
                  (Transition
                   (InAct (envRealName chan env) freshIn)
-                  (State (clean env' q') q'))
+                  (State env'' q'))
 
           doAct env (BoundOut chan priv) q = 
-            let (env', freshOut) = genFreshOutput env
-            in 
-              let q' = substProc q (Map.singleton priv freshOut)
+            let (env', freshOut) = trace "Generate fresh output" $ genFreshOutput env
+            in
+              let q' = trace (" ==> updated env' = " ++ (show env')) $ substProc q (Map.singleton priv freshOut)
+                  env'' = trace (" ==> updated env'' = " ++ (show (clean env' q'))) $ clean env' q'
                in
+                 trace (" ==> next proc = " ++ (show q'))
                  (Transition
                   (EscapeAct (envRealName chan env) freshOut)
-                  (State (clean env' q') q'))
+                  (State env'' q'))
 
   where clean env p = cleanupEnv env (dynamicNames p)
 

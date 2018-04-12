@@ -79,8 +79,12 @@ distinguishNames n m env@(Env eq dist causal) =
           | otherwise = Just $ Env eq (distinguish real_n real_m dist) causal
 
 cleanupEnv:: Env -> Set Name -> Env
-cleanupEnv (Env eq dist causal) names =
-  Env (cleanupEquiv eq names) (cleanupDist dist names) (cleanupCausal causal names)
+cleanupEnv env@(Env eq dist causal) names =
+  let env' = Env (cleanupEquiv eq names) (cleanupDist dist names) (cleanupCausal causal names)
+  in
+    (trace ("cleanupEnv env="  ++ (show env) ++ " names=" ++ (show names)))
+    (trace ("  ==> env'=" ++ (show env')))
+    env'
 
 
 computeClockValue:: Env -> Int
@@ -97,7 +101,7 @@ genFreshInput:: Env -> (Env, Name)
 genFreshInput env@(Env eq dist causal) =
   let freshIn = FreshIn (computeClockValue env)
   in
-    ( Env (newName freshIn eq) dist (causalFreshOut causal freshIn), freshIn)
+    ( Env (newName freshIn eq) dist (causalFreshIn causal freshIn), freshIn)
 
 genFreshOutput:: Env -> (Env, Name)
 genFreshOutput env@(Env eq dist causal) =
