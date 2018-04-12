@@ -82,8 +82,8 @@ cleanupEnv:: Env -> Set Name -> Env
 cleanupEnv env@(Env eq dist causal) names =
   let env' = Env (cleanupEquiv eq names) (cleanupDist dist names) (cleanupCausal causal names)
   in
-    (trace ("cleanupEnv env="  ++ (show env) ++ " names=" ++ (show names)))
-    (trace ("  ==> env'=" ++ (show env')))
+    -- (trace ("cleanupEnv env="  ++ (show env) ++ " names=" ++ (show names)))
+    -- (trace ("  ==> env'=" ++ (show env')))
     env'
 
 
