@@ -70,9 +70,9 @@ simRepl s@(State _ p) defEnv syms trans =
                            simRepl s defEnv syms trans
 
        ChooseTrans nth -> if (nth >= 1) && (nth <= (length trans))
-                          then do putStrLn "----------------"
+                          then do -- putStrLn "----------------"
                                   case (trans !! (nth - 1)) of
-                                    t@(Transition _ s') -> do putStrLn (showTrans t)
+                                    t@(Transition _ s') -> do -- putStrLn (showTrans t)
                                                               simulate s' defEnv
 
                           else do putStrLn $ "No such transition: " ++ (show nth)
