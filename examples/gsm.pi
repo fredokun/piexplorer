@@ -1,0 +1,25 @@
+// ported from HAL
+
+def Car(talk,switch,out) = 
+    (talk?(msg).out!msg.Car(talk,switch,out)) +
+    (switch?(t).switch?(s).Car(t,s,out))
+
+def Base(talkcentre,talkcar,give,switch,alert) =
+    (talkcentre?(msg).talkcar!msg.
+             Base(talkcentre,talkcar,give,switch,alert)) +
+    (give?(t).give?(s).switch!t.switch!s.give!give.
+             IdleBase(talkcentre,talkcar,give,switch,alert))
+
+def IdleBase(talkcentre,talkcar,give,switch,alert) =
+    alert?(empty).Base(talkcentre,talkcar,give,switch,alert)
+
+def Centre(in,tca,ta,ga,sa,aa,tcp,tp,gp,sp,ap) =
+    (in?(msg).tca!msg.Centre(in,tca,ta,ga,sa,aa,tcp,tp,gp,sp,ap)) +
+    (tau.ga!tp.ga!sp.ga?(empty).ap!ap.Centre(in,tcp,tp,gp,sp,ap,tca,ta,ga,sa,aa))
+
+def GSM(in,out) =
+    new(tca) new(ta) new(ga) new(sa) new(aa) new(tcp) new(tp) new(gp) new(sp) new(ap)
+    (Car(ta,sa,out) ||
+      Base(tca,ta,ga,sa,aa) ||
+      IdleBase(tcp,tp,gp,sp,ap) ||
+      Centre(in,tca,ta,ga,sa,aa,tcp,tp,gp,sp,ap))

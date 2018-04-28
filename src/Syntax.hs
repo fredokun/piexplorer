@@ -175,7 +175,13 @@ compareProc (Par p q _) (Par p' q' _) =
   (compare p p') `neqOr` (compare q q')
 compareProc (Par _ _ _) _ = LT
 compareProc _ (Par _ _ _) = GT
-compareProc p q = error $ "Don't know how to compare " ++ (show p) ++ " and " ++ (show q)
+compareProc (Sum p q _) (Sum p' q' _) =
+  (compare p p') `neqOr` (compare q q')
+--compareProc (Sum _ _ _) _ = LT
+-- compareProc _ (Sum _ _ _) = GT
+-- compareProc p q = error $ "Don't know how to compare " ++ (show p) ++ " and " ++ (show q)
+
+
 
 compareFreshProc:: String -> Process a -> String -> Process a -> Ordering
 compareFreshProc var p var' p' =

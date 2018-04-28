@@ -1,0 +1,44 @@
+def CC(fa,fp,l,in,data,ho_cmd,ho_com,ho_fail,ch_rel) = 
+   (in?(v).fa!data.fa!v.CC(fa,fp,l,in,data,ho_cmd,ho_com,ho_fail,ch_rel)) 
+ + (l?(mnew).fa!ho_cmd.fa!mnew.
+     ((fp?(c).[c=ho_com]fa!ch_rel.fa?(mold).l!mold.
+       CC(fp,fa,l,in,data,ho_cmd,ho_com,ho_fail,ch_rel))
+ + (fa?(c).[c=ho_fail]l!mnew.
+     CC(fa,fp,l,in,data,ho_cmd,ho_com,ho_fail,ch_rel))))
+
+def HC(l,m) = l!m.l?(m).HC(l,m)
+
+def MSC(fa,fp,m,in,data,ho_cmd,ho_com,ho_fail,ch_rel) = 
+   new(l) (HC(l,m) || CC(fa,fp,l,in,data,ho_cmd,ho_com,ho_fail,ch_rel))
+
+def BSa(f,m,ho_acc,ho_com,data,ho_cmd,ch_rel,ho_fail) = 
+   f?(c).(([c=data]f?(v).m!data.m!v.
+     BSa(f,m,ho_acc,ho_com,data,ho_cmd,ch_rel,ho_fail))
+ + (([c=ho_cmd]f?(v).m!ho_cmd.m!v.(f?(c).[c=ch_rel]f!m.
+     BSp(f,m,ho_acc,ho_com,data,ho_cmd,ch_rel,ho_fail))
+ + (m?(c).[c=ho_fail]f!ho_fail.
+     BSa(f,m,ho_acc,ho_com,data,ho_cmd,ch_rel,ho_fail)))))
+
+def BSp(f,m,ho_acc,ho_com,data,ho_cmd,ch_rel,ho_fail) = 
+   m?(c).[c=ho_acc]f!ho_com.
+     BSa(f,m,ho_acc,ho_com,data,ho_cmd,ch_rel,ho_fail)
+
+def MS(m,data,ho_cmd,out,ho_acc,ho_fail) = 
+   m?(c).([c=data]m?(v).out!v.MS(m,data,ho_cmd,out,ho_acc,ho_fail)
+	+ [c=ho_cmd]m?(mnew).
+		(mnew!ho_acc.MS(mnew,data,ho_cmd,out,ho_acc,ho_fail)
+		+ m!ho_fail.MS(m,data,ho_cmd,out,ho_acc,ho_fail)))
+
+def P(fa,fp,in,ho_acc,ho_com,data,ho_cmd,ch_rel,ho_fail) = 
+   new(m) (MSC(fa,fp,m,in,data,ho_cmd,ho_com,ho_fail,ch_rel) 
+       || BSp(fp,m,ho_acc,ho_com,data,ho_cmd,ch_rel,ho_fail))
+
+def Q(fa,out,ho_acc,ho_com,data,ho_cmd,ch_rel,ho_fail) = 
+   new(m) (BSa(fa,m,ho_acc,ho_com,data,ho_cmd,ch_rel,ho_fail) 
+       || MS(m,data,ho_cmd,out,ho_acc,ho_fail))
+
+def GSMfull(in,out) =
+  new(ho_acc) new(ho_com) new(data) new(ho_cmd) new(ch_rel) new(ho_fail)
+   new(fa) new(fp)(P(fa,fp,in,ho_acc,ho_com,data,ho_cmd,ch_rel,ho_fail) 
+             || Q(fa,out,ho_acc,ho_com,data,ho_cmd,ch_rel,ho_fail))
+
