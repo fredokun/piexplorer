@@ -1,0 +1,27 @@
+// ported from HAL
+
+def CryptedMsg(cm,k,m) = cm?(x). new(t)(k!t. t?(y). t?(r). [y=x] r!m.0)
+
+def Encrypt(r,k,m) = new(cm)(r!cm. CryptedMsg(cm,k,m))
+
+def Decrypt(r,k,cm) = new(x)(cm!x.k?(t).t!x.t!r.0)
+
+
+def P1(in,bus,k) = 
+  in?(m). new(r) ( Encrypt(r,k,m) || r?(cm). bus!cm. 0 )
+
+def Q1(bus,out,k) = 
+  bus?(cm). new(r)(Decrypt(r,k,cm) || r?(m). out!m. 0)
+
+def SP1(in,bus,out) = new(k) (P1(in,bus,k) || Q1(bus,out,k))
+
+
+def P2(in,bus,k1) =  in?(m). new(r1) new(r2) new(k2) 
+  (Encrypt(r1,k1,k2) || 
+     r1?(cm1). bus!cm1. Encrypt(r2,k2,m) || r2?(cm2). bus!cm2. 0 )
+
+def Q2(bus,out,k1) = bus?(cm1). bus?(cm2). new(r1)
+  (Decrypt(r1,k1,cm1) || 
+     r1?(k2). new(r2)(Decrypt(r2,k2,cm2) || r2?(m). out!m. 0))
+
+def SP2(in,bus,out) = new(k1) (P2(in,bus,k1) || Q2(bus,out,k1))

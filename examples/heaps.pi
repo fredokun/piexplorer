@@ -1,0 +1,17 @@
+
+/* ported from HAL */
+
+def Cell(i,o) = i?(c) .o!c.Cell(i,o)
+
+def Heap1(in,out) = Cell(in,out)
+def Heap2(in,out) = Cell(in,out) || Heap1(in,out)
+def Heap3(in,out) = Cell(in,out) || Heap2(in,out)
+def Heap4(in,out) = Cell(in,out) || Heap3(in,out)
+def Heap5(in,out) = Cell(in,out) || Heap4(in,out)
+def Heap6(in,out) = Cell(in,out) || Heap5(in,out)
+def Heap7(in,out) = Cell(in,out) || Heap6(in,out)
+def Heap8(in,out) = Cell(in,out) || Heap7(in,out)
+
+// exemple process:
+// Heap8(in, out)
+

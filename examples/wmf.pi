@@ -1,0 +1,26 @@
+// ported from HAL
+
+def CryptedMsg(cm,k,m) = cm?(x). new(t)(k!t. t?(y). t?(r). [y=x] r!m.0)
+
+def Encrypt(r,k,m) = new(cm)(r!cm. CryptedMsg(cm,k,m))
+
+def Decrypt(r,k,cm) = new(x)(cm!x.k?(t).t!x.t!r.0)
+
+
+def A(kas,in,bus) = 
+  in?(v).new(k) new(r) (Encrypt(r,kas,k) || 
+    r?(ck). bus!ck. new(r) (Encrypt(r,k,v) ||
+      r?(cv). bus!cv. 0))
+
+def B(kbs,out,bus) = 
+  bus?(ck). new(r)(Decrypt(r,kbs,ck) ||
+    r?(k). bus?(cv). new(r)(Decrypt(r,k,cv) ||
+      r?(v). out!v. 0))
+
+def S(kas,kbs,bus) = 
+  bus?(ck). new(r)(Decrypt(r,kas,ck) || 
+    r?(k). new(r)(Encrypt(r,kbs,k) ||
+      r?(ck). bus!ck. 0))
+
+def WMF(in,out,bus) = 
+  new(kas) new(kbs) (A(kas,in,bus)||B(kbs,out,bus)||S(kas,kbs,bus))

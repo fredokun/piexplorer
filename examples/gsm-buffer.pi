@@ -1,0 +1,27 @@
+/* ported from HAL */
+
+def S0(in,out) = 
+    (in?(v). S1(in,out,v)) + 
+    (tau. S0(in,out)) 
+
+def S1(in,out,v1) = 
+    (in?(v). S2(in,out,v1,v)) + 
+    (out!v1. S0(in,out)) + 
+    (tau. out!v1. S0(in,out)) 
+
+def S2(in,out,v1,v2) = 
+    (in?(v). S3(in,out,v1,v2,v)) + 
+    (out!v1. S1(in,out,v2)) + 
+    (tau. out!v1. out!v2. S0(in,out)) 
+
+def S3(in,out,v1,v2,v3) = 
+    out!v1. S2(in,out,v2,v3)
+
+def GSMbuffer(in,out) = S0(in,out)
+
+
+
+
+
+
+
